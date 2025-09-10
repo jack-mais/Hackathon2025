@@ -251,6 +251,15 @@ class AISMCPServer:
             all_ship_data, f"{scenario_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
         )
         
+        # Create enhanced message based on what was generated
+        files_info = []
+        if "json" in saved_files:
+            files_info.append(f"📁 JSON data: {saved_files['json']}")
+        if "map" in saved_files:
+            files_info.append(f"🗺️ Interactive map: {saved_files['map']}")
+        
+        files_text = "\n".join(files_info) if files_info else "Files saved"
+        
         return {
             "success": True,
             "scenario_name": scenario_name,
@@ -260,7 +269,7 @@ class AISMCPServer:
             "report_interval_minutes": report_interval_minutes,
             "ships": ship_summaries,
             "saved_files": saved_files,
-            "message": f"Generated {len(ships)} ships in {region} scenario. Data saved to {saved_files.get('json', 'file')}"
+            "message": f"✅ Generated {len(ships)} ships in {region} scenario!\n\n{files_text}\n\n🎯 Both JSON data and interactive HTML map have been created automatically."
         }
     
     async def _generate_custom_ships(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -342,6 +351,15 @@ class AISMCPServer:
             all_ship_data, f"{scenario_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
         )
         
+        # Create enhanced message based on what was generated
+        files_info = []
+        if "json" in saved_files:
+            files_info.append(f"📁 JSON data: {saved_files['json']}")
+        if "map" in saved_files:
+            files_info.append(f"🗺️ Interactive map: {saved_files['map']}")
+        
+        files_text = "\n".join(files_info) if files_info else "Files saved"
+        
         return {
             "success": True,
             "scenario_name": scenario_name,
@@ -349,7 +367,7 @@ class AISMCPServer:
             "duration_hours": duration_hours,
             "ships": ship_summaries,
             "saved_files": saved_files,
-            "message": f"Generated {len(generated_ships)} custom ships. Data saved to {saved_files.get('json', 'file')}"
+            "message": f"✅ Generated {len(generated_ships)} custom ships!\n\n{files_text}\n\n🎯 Both JSON data and interactive HTML map have been created automatically."
         }
     
     async def _list_available_ports(self, params: Dict[str, Any]) -> Dict[str, Any]:

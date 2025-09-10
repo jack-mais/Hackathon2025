@@ -94,17 +94,27 @@ class AISDemo:
                 for ship in result["ships"]:
                     ships_summary.append(f"• {ship['name']} ({ship['type']}) - {ship['speed_knots']} knots")
                 
+                # Generate output message based on available files
+                files_info = []
+                if 'json' in result['saved_files']:
+                    files_info.append(f"📁 JSON data: `{result['saved_files']['json']}`")
+                if 'map' in result['saved_files']:
+                    files_info.append(f"🗺️ Interactive map: `{result['saved_files']['map']}`")
+                
+                files_text = "\n".join(files_info) if files_info else "📁 Files saved successfully"
+                
                 return f"""✅ **Demo Generated Successfully!**
 
 I've created {result['ships_generated']} ships for demonstration:
 {chr(10).join(ships_summary)}
 
-📁 **Data saved to:** `{result['saved_files']['json']}`
-🗺️  **To visualize:** Run `python map_multi_viewer.py`
+{files_text}
+
 ⏱️  **Simulation:** {result['duration_hours']} hours of movement data
 📊 **Total reports:** {sum(ship['total_reports'] for ship in result['ships'])} position updates
 
-This shows realistic AIS tracking data with proper timestamps, coordinates, speeds, and navigation status for each vessel!"""
+🎯 **Both JSON data and interactive HTML map created automatically!** 
+Open the HTML file in your browser to see ships moving on the map with detailed info popups."""
             else:
                 return f"❌ Demo generation failed: {result.get('error', 'Unknown error')}"
         
@@ -201,18 +211,28 @@ This shows realistic AIS tracking data with proper timestamps, coordinates, spee
             for ship in result["ships"]:
                 ships_summary.append(f"• {ship['name']} ({ship['type']}) - {ship['speed_knots']} knots, {ship['total_reports']} reports")
             
+            # Generate output message based on available files
+            files_info = []
+            if 'json' in result['saved_files']:
+                files_info.append(f"📁 JSON data: `{result['saved_files']['json']}`")
+            if 'map' in result['saved_files']:
+                files_info.append(f"🗺️ Interactive map: `{result['saved_files']['map']}`")
+            
+            files_text = "\n".join(files_info) if files_info else "📁 Files saved successfully"
+            
             return f"""✅ **Ships Generated Successfully!**
 
 I've created {result['ships_generated']} ships for your scenario:
 {chr(10).join(ships_summary)}
 
-📁 **Data saved to:** `{result['saved_files']['json']}`
-🗺️  **To visualize:** Run `python map_multi_viewer.py`
+{files_text}
+
 ⏱️  **Simulation duration:** {result['duration_hours']} hours
 📡 **Report interval:** Every 5 minutes
-🌊 **Area:** Irish Sea region
+🌊 **Area:** {result.get('region', 'Maritime region')}
 
-The generated data includes realistic AIS position reports with proper maritime timestamps, navigation status, speed over ground, course over ground, and vessel characteristics. Perfect for testing maritime systems or data analysis!"""
+🎯 **Both JSON data and interactive HTML map created automatically!** 
+The generated data includes realistic AIS position reports with proper maritime timestamps, navigation status, speed over ground, course over ground, and vessel characteristics. Open the HTML file in your browser to see ships moving on the interactive map!"""
         else:
             return f"❌ Generation failed: {result.get('error', 'Unknown error occurred')}"
     
@@ -264,11 +284,13 @@ The generated data includes realistic AIS position reports with proper maritime 
 ✅ **Perfect for demos** - Reliable and fast
 ✅ **Worldwide coverage** - Any maritime region
 
-**Output:**
-• JSON files with detailed AIS position reports
-• Interactive map visualization available
-• NMEA format data for marine systems  
-• Realistic timestamps, speeds, and navigation status
+**Output (Automatically Generated):**
+• 📁 JSON files with detailed AIS position reports
+• 🗺️ Interactive HTML maps (automatic - no extra steps needed!)
+• 📡 NMEA format data for marine systems  
+• ⚓ Realistic timestamps, speeds, and navigation status
+
+🎯 **Every prompt generates BOTH data and map automatically** - just open the HTML file to see your ships on an interactive map with detailed popups!
 
 Just tell me what kind of maritime scenario and which region you'd like to create!
         """
