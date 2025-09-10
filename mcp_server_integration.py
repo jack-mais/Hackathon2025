@@ -30,16 +30,25 @@ class MCPVesselTrackServer:
         self.track_service = VesselTrackMCPServer()
         self.server = Server("vessel-track-generator")
         
-        # Register tools
-        self.server.list_tools = self.list_tools
-        self.server.call_tool = self.call_tool
-        
-        # Register resources (optional - for accessing generated data)
-        self.server.list_resources = self.list_resources
-        self.server.read_resource = self.read_resource
-        
         # Store generated tracks for later access
         self.generated_tracks = {}
+        
+        # Register handlers using decorators
+        @self.server.list_tools()
+        async def handle_list_tools() -> list[Tool]:
+            return await self.list_tools()
+        
+        @self.server.call_tool()
+        async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
+            return await self.call_tool(name, arguments)
+        
+        @self.server.list_resources()
+        async def handle_list_resources() -> list[Resource]:
+            return await self.list_resources()
+        
+        @self.server.read_resource()
+        async def handle_read_resource(uri: str) -> str:
+            return await self.read_resource(uri)
 
     async def list_tools(self) -> list[Tool]:
         """List available tools for the MCP client"""
@@ -290,3 +299,22 @@ class MCPVesselTrackServer:
                 all_speeds.append(point['speed_over_ground'])
         
         avg_speed = sum(all_speeds) / len(all_speeds) if all_speeds else 0
+        max_speed = max(all_speeds) if all_speeds else 0
+        min_speed = min(all_speeds) if all_speeds else 0
+        
+        # Format statistics
+        stats = f"**Track Set Statistics**\n\n"
+        stats += f"• Total vessels: {total_vessels}\n"
+        stats += f"• Total track points: {total_points:,}\n"
+        stats += f"• Average points per vessel: {total_points // total_vessels if total_vessels else 0}\n\n"
+        
+        stats += "**Vessel Class Distribution:**\n"
+        for vessel_class, count in sorted(class_counts.items()):
+            stats += f"• {vessel_class}: {count} ({count*100/total_vessels:.1f}%)\n"
+        
+        stats += f"\n**Speed Statistics:**\n"
+        stats += f"• Average speed: {avg_speed:.1f} knots\n"
+        stats += f"• Max speed: {max_speed:.1f} knots\n"
+        stats += f"• Min speed: {min_speed:.1f} knots\n"
+        
+        return stats

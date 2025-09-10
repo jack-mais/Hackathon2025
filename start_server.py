@@ -9,6 +9,7 @@ based on natural language prompts.
 import asyncio
 import logging
 from mcp.server.stdio import stdio_server
+from mcp.server.models import InitializationOptions
 from mcp_server_integration import MCPVesselTrackServer
 
 # Set up logging
