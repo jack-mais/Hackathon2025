@@ -254,7 +254,7 @@ secrets.json
 .env.production
 
 # Claude Desktop config (contains local paths)
-claude_desktop_config.json
+mcp.json
 
 # Test outputs
 test_output/
