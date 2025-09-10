@@ -15,13 +15,15 @@ This hackathon project creates an LLM-powered AIS (Automatic Identification Syst
 - JSON file output
 - REST API interface
 
-**🚧 WALK Version (Next)**
-- Multiple ships with proper tracking
-- Complex movement patterns
-- Collision avoidance
+**✅ WALK Version (Completed)**
+- Multiple ships with realistic routing
+- Different ship types (Passenger, Cargo, Fishing, Pilot, High-Speed)
+- Varied movement patterns (Ferry routes, Cargo lanes, Fishing circles, Patrol patterns)
+- Multi-ship map visualization
+- Realistic speeds and behaviors per ship type
 
-**🚀 RUN Version (Future)**
-- LLM prompt parsing
+**🚧 RUN Version (Next)**
+- LLM prompt parsing: "Generate AIS NMEA data for 2 ships roaming about the Irish sea"
 - MCP integration
 - Natural language interface
 
@@ -66,8 +68,10 @@ python test_crawl.py
 ### Convenience Scripts
 - `source activate.sh` - Activate venv with helpful info
 - `python start_server.py` - Start the FastAPI server  
-- `python test_crawl.py` - Test the core functionality
-- `python map_viewer.py` - View AIS data on interactive map 🗺️
+- `python test_crawl.py` - Test single ship (Crawl version)
+- `python test_walk.py` - Test multiple ships (Walk version) 🚢🚢🚢
+- `python map_viewer.py` - View single ship on map 🗺️
+- `python map_multi_viewer.py` - View multiple ships on map 🗺️
 
 ## API Endpoints
 

@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_8f20bf51a9a1e9e224db86b22b7eae34 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+    <h3 align="center" style="font-size:20px"><b>🚢 Multi-Ship AIS Visualization</b></h3>
+    <p align="center">
+        <b>Scenario:</b> irish_sea_4_ships_walk<br>
+        <b>Ships:</b> 4<br>
+        <b>Generated:</b> 2025-09-10T12:35:51<br>
+        <b>Walk Version - Hackathon 2025</b>
+    </p>
+    
+    
+    <div style="position: fixed; 
+                bottom: 50px; right: 50px; width: 200px; height: 120px; 
+                background-color: white; border:2px solid grey; z-index:9999; 
+                font-size:14px; padding: 10px">
+    <h4>Ship Types</h4>
+    <p><i style="color:blue">●</i> Passenger<br>
+       <i style="color:green">●</i> Cargo<br>
+       <i style="color:orange">●</i> Fishing<br>
+       <i style="color:red">●</i> Pilot<br>
+       <i style="color:purple">●</i> High Speed</p>
+    </div>
+    
+    
+            <div class="folium-map" id="map_8f20bf51a9a1e9e224db86b22b7eae34" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_8f20bf51a9a1e9e224db86b22b7eae34 = L.map(
+                "map_8f20bf51a9a1e9e224db86b22b7eae34",
+                {
+                    center: [53.4977559415704, -5.802494521537723],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 8,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_76fdec5a716279f8e69165dc21ac8723 = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_76fdec5a716279f8e69165dc21ac8723.addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+            var poly_line_987a530638fe64924ffa59046ed9ade1 = L.polyline(
+                [[53.3498, -6.2603], [53.34874671065392, -6.234216807117168], [53.347693421307845, -6.208133614234335], [53.34664013196176, -6.182050421351502], [53.34558684261569, -6.15596722846867], [53.344533553269606, -6.129884035585838], [53.343480263923524, -6.103800842703005], [53.34242697457745, -6.077717649820173], [53.34137368523137, -6.05163445693734], [53.34032039588529, -6.025551264054508], [53.33926710653921, -5.999468071171675], [53.338213817193136, -5.973384878288843], [53.337160527847054, -5.947301685406011], [53.33610723850097, -5.921218492523178], [53.3350539491549, -5.895135299640345], [53.334000659808815, -5.869052106757513], [53.33294737046274, -5.842968913874681], [53.33189408111666, -5.8168857209918485], [53.33084079177058, -5.790802528109015], [53.3297875024245, -5.764719335226183], [53.328866737472055, -5.736973759229616], [53.32806534644426, -5.707730759316566], [53.32726395541646, -5.678487759403517], [53.32646256438866, -5.6492447594904664], [53.325661173360864, -5.620001759577417]],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "blue", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+        var popup_e52eae22160c3b31a7246134a4f9cfd3 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_7c78bc344bfb82412dc6425a5e23b4f4 = $(`<div id="html_7c78bc344bfb82412dc6425a5e23b4f4" style="width: 100.0%; height: 100.0%;">CELTIC SEA_1 (PASSENGER)</div>`)[0];
+                popup_e52eae22160c3b31a7246134a4f9cfd3.setContent(html_7c78bc344bfb82412dc6425a5e23b4f4);
+            
+        
+
+        poly_line_987a530638fe64924ffa59046ed9ade1.bindPopup(popup_e52eae22160c3b31a7246134a4f9cfd3)
+        ;
+
+        
+    
+    
+            var marker_9b321d70633cd9517ee80d09e6473ea8 = L.marker(
+                [53.3498, -6.2603],
+                {
+}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+            var icon_73955fad83501e7d9e66c989ca96271f = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "play",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_851d325c762962d3cb0515c9fd9ac04e = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_3001e06f141e7896f1a28f492fd28d4e = $(`<div id="html_3001e06f141e7896f1a28f492fd28d4e" style="width: 100.0%; height: 100.0%;">         <b>🟢 START: CELTIC SEA_1</b><br>         <b>MMSI:</b> 123456000<br>         <b>Type:</b> PASSENGER<br>         <b>Time:</b> 2025-09-10T12:35:51<br>         <b>Position:</b> 53.349800, -6.260300<br>         <b>Speed:</b> 12.0 knots         </div>`)[0];
+                popup_851d325c762962d3cb0515c9fd9ac04e.setContent(html_3001e06f141e7896f1a28f492fd28d4e);
+            
+        
+
+        marker_9b321d70633cd9517ee80d09e6473ea8.bindPopup(popup_851d325c762962d3cb0515c9fd9ac04e)
+        ;
+
+        
+    
+    
+            marker_9b321d70633cd9517ee80d09e6473ea8.bindTooltip(
+                `<div>
+                     START: CELTIC SEA_1
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_9b321d70633cd9517ee80d09e6473ea8.setIcon(icon_73955fad83501e7d9e66c989ca96271f);
+            
+    
+            var marker_f1f70eee0fb9f5d8905a5cd00773ae04 = L.marker(
+                [53.325661173360864, -5.620001759577417],
+                {
+}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+            var icon_eeacbfc1145449aab9ff0015368f02ac = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_6de4efa307ff999c346740c1da49f734 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_fd347e4d3a356728751f8126ec24a764 = $(`<div id="html_fd347e4d3a356728751f8126ec24a764" style="width: 100.0%; height: 100.0%;">         <b>🔴 CURRENT: CELTIC SEA_1</b><br>         <b>MMSI:</b> 123456000<br>         <b>Type:</b> PASSENGER<br>         <b>Time:</b> 2025-09-10T14:35:51<br>         <b>Position:</b> 53.325661, -5.620002<br>         <b>Speed:</b> 12.0 knots<br>         <b>Status:</b> UNDER_WAY_USING_ENGINE         </div>`)[0];
+                popup_6de4efa307ff999c346740c1da49f734.setContent(html_fd347e4d3a356728751f8126ec24a764);
+            
+        
+
+        marker_f1f70eee0fb9f5d8905a5cd00773ae04.bindPopup(popup_6de4efa307ff999c346740c1da49f734)
+        ;
+
+        
+    
+    
+            marker_f1f70eee0fb9f5d8905a5cd00773ae04.bindTooltip(
+                `<div>
+                     CURRENT: CELTIC SEA_1
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_f1f70eee0fb9f5d8905a5cd00773ae04.setIcon(icon_eeacbfc1145449aab9ff0015368f02ac);
+            
+    
+            var circle_marker_0acf97849433309f7a0e3928aa8c8937 = L.circleMarker(
+                [53.343480263923524, -6.103800842703005],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "blue", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+        var popup_f0bee76732df2bd641799c31f1799941 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_ce6a5106c2c817249f2bd7b3d361243c = $(`<div id="html_ce6a5106c2c817249f2bd7b3d361243c" style="width: 100.0%; height: 100.0%;">CELTIC SEA_1 - Point 7</div>`)[0];
+                popup_f0bee76732df2bd641799c31f1799941.setContent(html_ce6a5106c2c817249f2bd7b3d361243c);
+            
+        
+
+        circle_marker_0acf97849433309f7a0e3928aa8c8937.bindPopup(popup_f0bee76732df2bd641799c31f1799941)
+        ;
+
+        
+    
+    
+            var circle_marker_cdcda10c25a63c6d5c3d89da74a7df49 = L.circleMarker(
+                [53.337160527847054, -5.947301685406011],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "blue", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+        var popup_e88c0c024d294c9286657df2558b4a64 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_ffcb8d67a6de54dc1f0ec7fc3466b9df = $(`<div id="html_ffcb8d67a6de54dc1f0ec7fc3466b9df" style="width: 100.0%; height: 100.0%;">CELTIC SEA_1 - Point 13</div>`)[0];
+                popup_e88c0c024d294c9286657df2558b4a64.setContent(html_ffcb8d67a6de54dc1f0ec7fc3466b9df);
+            
+        
+
+        circle_marker_cdcda10c25a63c6d5c3d89da74a7df49.bindPopup(popup_e88c0c024d294c9286657df2558b4a64)
+        ;
+
+        
+    
+    
+            var circle_marker_f53dd3718a69890d55be5bd4d361ab28 = L.circleMarker(
+                [53.33084079177058, -5.790802528109015],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "blue", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+        var popup_d5f6c6874e9f29b5c4e1b4f2cc81b191 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_570aac08936d9530b2f9085bdc153801 = $(`<div id="html_570aac08936d9530b2f9085bdc153801" style="width: 100.0%; height: 100.0%;">CELTIC SEA_1 - Point 19</div>`)[0];
+                popup_d5f6c6874e9f29b5c4e1b4f2cc81b191.setContent(html_570aac08936d9530b2f9085bdc153801);
+            
+        
+
+        circle_marker_f53dd3718a69890d55be5bd4d361ab28.bindPopup(popup_d5f6c6874e9f29b5c4e1b4f2cc81b191)
+        ;
+
+        
+    
+    
+            var poly_line_20b5f664feeccc6412da9316fdc287f2 = L.polyline(
+                [[53.3498, -6.2603], [53.351048161880954, -6.240145791662258], [53.352296323761905, -6.219991583324515], [53.35354448564286, -6.199837374986772], [53.35479264752381, -6.1796831666490295], [53.35604080940475, -6.159528958311287], [53.357288971285705, -6.139374749973545], [53.35853713316666, -6.119220541635801], [53.35978529504761, -6.099066333298059], [53.36103345692856, -6.078912124960317], [53.36228161880951, -6.058757916622574], [53.36352978069046, -6.038603708284831], [53.364777942571415, -6.0184494999470886], [53.36602610445237, -5.998295291609346], [53.36727426633332, -5.978141083271604], [53.36852242821426, -5.957986874933861], [53.369770590095214, -5.937832666596118], [53.371018751976166, -5.917678458258376], [53.37226691385712, -5.897524249920633], [53.37351507573807, -5.877370041582891], [53.37476323761902, -5.857215833245148], [53.37601139949997, -5.837061624907405], [53.377259561380924, -5.816907416569663], [53.378507723261876, -5.79675320823192], [53.37975588514282, -5.776598999894177]],
+                {"bubblingMouseEvents": true, "color": "green", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "green", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+        var popup_d5a278881a90182045149707fd50f38b = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_7ebc70514c322f244bc00e20114c47c3 = $(`<div id="html_7ebc70514c322f244bc00e20114c47c3" style="width: 100.0%; height: 100.0%;">IRISH CARGO_2 (CARGO)</div>`)[0];
+                popup_d5a278881a90182045149707fd50f38b.setContent(html_7ebc70514c322f244bc00e20114c47c3);
+            
+        
+
+        poly_line_20b5f664feeccc6412da9316fdc287f2.bindPopup(popup_d5a278881a90182045149707fd50f38b)
+        ;
+
+        
+    
+    
+            var marker_ecb4a3b96a192b08c57e90e4d9f128a1 = L.marker(
+                [53.3498, -6.2603],
+                {
+}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+            var icon_30009796666b823ced914c06db171086 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "play",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_aa3a66501486bbc5014ef86f59fba5bc = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_72b45350d5124b6e46289667c23333c9 = $(`<div id="html_72b45350d5124b6e46289667c23333c9" style="width: 100.0%; height: 100.0%;">         <b>🟢 START: IRISH CARGO_2</b><br>         <b>MMSI:</b> 123456001<br>         <b>Type:</b> CARGO<br>         <b>Time:</b> 2025-09-10T12:35:51<br>         <b>Position:</b> 53.349800, -6.260300<br>         <b>Speed:</b> 9.0 knots         </div>`)[0];
+                popup_aa3a66501486bbc5014ef86f59fba5bc.setContent(html_72b45350d5124b6e46289667c23333c9);
+            
+        
+
+        marker_ecb4a3b96a192b08c57e90e4d9f128a1.bindPopup(popup_aa3a66501486bbc5014ef86f59fba5bc)
+        ;
+
+        
+    
+    
+            marker_ecb4a3b96a192b08c57e90e4d9f128a1.bindTooltip(
+                `<div>
+                     START: IRISH CARGO_2
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_ecb4a3b96a192b08c57e90e4d9f128a1.setIcon(icon_30009796666b823ced914c06db171086);
+            
+    
+            var marker_0db84fcaebe9192b225a4c80c9922634 = L.marker(
+                [53.37975588514282, -5.776598999894177],
+                {
+}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+            var icon_e033f99db5f8648131cb45074db7d678 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "cube",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_30cadbce606b6f61f9a97cbad2b3a034 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_109fe9f64f883af7e5f3dc874c245e92 = $(`<div id="html_109fe9f64f883af7e5f3dc874c245e92" style="width: 100.0%; height: 100.0%;">         <b>🔴 CURRENT: IRISH CARGO_2</b><br>         <b>MMSI:</b> 123456001<br>         <b>Type:</b> CARGO<br>         <b>Time:</b> 2025-09-10T14:35:51<br>         <b>Position:</b> 53.379756, -5.776599<br>         <b>Speed:</b> 9.0 knots<br>         <b>Status:</b> UNDER_WAY_USING_ENGINE         </div>`)[0];
+                popup_30cadbce606b6f61f9a97cbad2b3a034.setContent(html_109fe9f64f883af7e5f3dc874c245e92);
+            
+        
+
+        marker_0db84fcaebe9192b225a4c80c9922634.bindPopup(popup_30cadbce606b6f61f9a97cbad2b3a034)
+        ;
+
+        
+    
+    
+            marker_0db84fcaebe9192b225a4c80c9922634.bindTooltip(
+                `<div>
+                     CURRENT: IRISH CARGO_2
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_0db84fcaebe9192b225a4c80c9922634.setIcon(icon_e033f99db5f8648131cb45074db7d678);
+            
+    
+            var circle_marker_a62efa7ad9d7d1ac4a9abb8024a2baad = L.circleMarker(
+                [53.357288971285705, -6.139374749973545],
+                {"bubblingMouseEvents": true, "color": "green", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "green", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+        var popup_2fed2ce2bb44bd725487bd3791d28081 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c3c51053f20d6ca194f0e718f527dac5 = $(`<div id="html_c3c51053f20d6ca194f0e718f527dac5" style="width: 100.0%; height: 100.0%;">IRISH CARGO_2 - Point 7</div>`)[0];
+                popup_2fed2ce2bb44bd725487bd3791d28081.setContent(html_c3c51053f20d6ca194f0e718f527dac5);
+            
+        
+
+        circle_marker_a62efa7ad9d7d1ac4a9abb8024a2baad.bindPopup(popup_2fed2ce2bb44bd725487bd3791d28081)
+        ;
+
+        
+    
+    
+            var circle_marker_0ce776019c247f2bd1d82f9d8dfffdfc = L.circleMarker(
+                [53.364777942571415, -6.0184494999470886],
+                {"bubblingMouseEvents": true, "color": "green", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "green", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+        var popup_fe749937aa8fd6a620de2ec5b93d2128 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_a2c226377a1265e858388d62533057b1 = $(`<div id="html_a2c226377a1265e858388d62533057b1" style="width: 100.0%; height: 100.0%;">IRISH CARGO_2 - Point 13</div>`)[0];
+                popup_fe749937aa8fd6a620de2ec5b93d2128.setContent(html_a2c226377a1265e858388d62533057b1);
+            
+        
+
+        circle_marker_0ce776019c247f2bd1d82f9d8dfffdfc.bindPopup(popup_fe749937aa8fd6a620de2ec5b93d2128)
+        ;
+
+        
+    
+    
+            var circle_marker_122ec08de58bd2d0d29ddb64064434ba = L.circleMarker(
+                [53.37226691385712, -5.897524249920633],
+                {"bubblingMouseEvents": true, "color": "green", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "green", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+        var popup_76755cd33b155e72ef1e10f2f4b60b49 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_0bdaf8332e6162cee93ded0db45c8e49 = $(`<div id="html_0bdaf8332e6162cee93ded0db45c8e49" style="width: 100.0%; height: 100.0%;">IRISH CARGO_2 - Point 19</div>`)[0];
+                popup_76755cd33b155e72ef1e10f2f4b60b49.setContent(html_0bdaf8332e6162cee93ded0db45c8e49);
+            
+        
+
+        circle_marker_122ec08de58bd2d0d29ddb64064434ba.bindPopup(popup_76755cd33b155e72ef1e10f2f4b60b49)
+        ;
+
+        
+    
+    
+            var poly_line_133300cd6e90972cb3b7d4b887cc23b1 = L.polyline(
+                [[53.7, -5.5], [53.76453461280655, -5.467732693596726], [53.8290692256131, -5.435465387193452], [53.893603838419644, -5.403198080790178], [53.89148582094177, -5.379444953445138], [53.88203494570687, -5.356628522276759], [53.87258407047197, -5.33381209110838], [53.85241701617731, -5.321711838999772], [53.829600585008926, -5.312260963764877], [53.806784153840546, -5.3028100885299825], [53.783967722672166, -5.3066407867049135], [53.761151291503786, -5.316091661939808], [53.73833486033541, -5.325542537174703], [53.723585231353084, -5.343060214595656], [53.714134356118194, -5.365876645764035], [53.7046834808833, -5.388693076932415], [53.704767394351585, -5.411509508100794], [53.71421826958648, -5.434325939269173], [53.72366914482138, -5.457142370437552], [53.738537445368614, -5.474541376293586], [53.761353876536994, -5.4839922515284805], [53.784170307705374, -5.493443126763376], [53.80698673887375, -5.49710599800173], [53.82980317004214, -5.487655122766835], [53.85261960121052, -5.47820424753194]],
+                {"bubblingMouseEvents": true, "color": "orange", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "orange", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+        var popup_5f1d971bfc9cdc32d62bcf219593bcbf = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_02ad650b5091a15edf264450778f65a6 = $(`<div id="html_02ad650b5091a15edf264450778f65a6" style="width: 100.0%; height: 100.0%;">ATLANTIC FISHER_3 (FISHING)</div>`)[0];
+                popup_5f1d971bfc9cdc32d62bcf219593bcbf.setContent(html_02ad650b5091a15edf264450778f65a6);
+            
+        
+
+        poly_line_133300cd6e90972cb3b7d4b887cc23b1.bindPopup(popup_5f1d971bfc9cdc32d62bcf219593bcbf)
+        ;
+
+        
+    
+    
+            var marker_017fd416cab761b95f933bb923380077 = L.marker(
+                [53.7, -5.5],
+                {
+}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+            var icon_c0202f815515ba3d4157d4de283b5b4a = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "play",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_56a16eab765c4a08224f350dd29503f5 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_213b2d8885934255aaa4c275c33292b1 = $(`<div id="html_213b2d8885934255aaa4c275c33292b1" style="width: 100.0%; height: 100.0%;">         <b>🟢 START: ATLANTIC FISHER_3</b><br>         <b>MMSI:</b> 123456002<br>         <b>Type:</b> FISHING<br>         <b>Time:</b> 2025-09-10T12:35:51<br>         <b>Position:</b> 53.700000, -5.500000<br>         <b>Speed:</b> 6.0 knots         </div>`)[0];
+                popup_56a16eab765c4a08224f350dd29503f5.setContent(html_213b2d8885934255aaa4c275c33292b1);
+            
+        
+
+        marker_017fd416cab761b95f933bb923380077.bindPopup(popup_56a16eab765c4a08224f350dd29503f5)
+        ;
+
+        
+    
+    
+            marker_017fd416cab761b95f933bb923380077.bindTooltip(
+                `<div>
+                     START: ATLANTIC FISHER_3
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_017fd416cab761b95f933bb923380077.setIcon(icon_c0202f815515ba3d4157d4de283b5b4a);
+            
+    
+            var marker_e147835dc82dfc6d17b7b6456fd6bc00 = L.marker(
+                [53.85261960121052, -5.47820424753194],
+                {
+}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+            var icon_201405d0c73763cbc63582e2e0d77558 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "anchor",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_a3b2a1eebad2e2cbab2ca12b798e5784 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_af40c453af13e648dd7a610ace5bec12 = $(`<div id="html_af40c453af13e648dd7a610ace5bec12" style="width: 100.0%; height: 100.0%;">         <b>🔴 CURRENT: ATLANTIC FISHER_3</b><br>         <b>MMSI:</b> 123456002<br>         <b>Type:</b> FISHING<br>         <b>Time:</b> 2025-09-10T14:35:51<br>         <b>Position:</b> 53.852620, -5.478204<br>         <b>Speed:</b> 6.0 knots<br>         <b>Status:</b> ENGAGED_IN_FISHING         </div>`)[0];
+                popup_a3b2a1eebad2e2cbab2ca12b798e5784.setContent(html_af40c453af13e648dd7a610ace5bec12);
+            
+        
+
+        marker_e147835dc82dfc6d17b7b6456fd6bc00.bindPopup(popup_a3b2a1eebad2e2cbab2ca12b798e5784)
+        ;
+
+        
+    
+    
+            marker_e147835dc82dfc6d17b7b6456fd6bc00.bindTooltip(
+                `<div>
+                     CURRENT: ATLANTIC FISHER_3
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_e147835dc82dfc6d17b7b6456fd6bc00.setIcon(icon_201405d0c73763cbc63582e2e0d77558);
+            
+    
+            var circle_marker_1d82d4e1f8dded86a1eda78afba00426 = L.circleMarker(
+                [53.87258407047197, -5.33381209110838],
+                {"bubblingMouseEvents": true, "color": "orange", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "orange", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+        var popup_feca8c50da69d07206c5525bee378562 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_be4f34085641ade144429f190367a131 = $(`<div id="html_be4f34085641ade144429f190367a131" style="width: 100.0%; height: 100.0%;">ATLANTIC FISHER_3 - Point 7</div>`)[0];
+                popup_feca8c50da69d07206c5525bee378562.setContent(html_be4f34085641ade144429f190367a131);
+            
+        
+
+        circle_marker_1d82d4e1f8dded86a1eda78afba00426.bindPopup(popup_feca8c50da69d07206c5525bee378562)
+        ;
+
+        
+    
+    
+            var circle_marker_b02245d4aa086201c65a782de9bc885b = L.circleMarker(
+                [53.73833486033541, -5.325542537174703],
+                {"bubblingMouseEvents": true, "color": "orange", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "orange", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+        var popup_8b77fed50eea41eb9f047d1bc6622a0d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_a7cef807ca2bcb7506fc6d8ae48fccea = $(`<div id="html_a7cef807ca2bcb7506fc6d8ae48fccea" style="width: 100.0%; height: 100.0%;">ATLANTIC FISHER_3 - Point 13</div>`)[0];
+                popup_8b77fed50eea41eb9f047d1bc6622a0d.setContent(html_a7cef807ca2bcb7506fc6d8ae48fccea);
+            
+        
+
+        circle_marker_b02245d4aa086201c65a782de9bc885b.bindPopup(popup_8b77fed50eea41eb9f047d1bc6622a0d)
+        ;
+
+        
+    
+    
+            var circle_marker_dc2a809e21a5beca23d863474b1bf8cc = L.circleMarker(
+                [53.72366914482138, -5.457142370437552],
+                {"bubblingMouseEvents": true, "color": "orange", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "orange", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+        var popup_d52f57ef8486c730efb4ca57b639007b = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_405f765e7ca44f5a9bceacaf869f0b4f = $(`<div id="html_405f765e7ca44f5a9bceacaf869f0b4f" style="width: 100.0%; height: 100.0%;">ATLANTIC FISHER_3 - Point 19</div>`)[0];
+                popup_d52f57ef8486c730efb4ca57b639007b.setContent(html_405f765e7ca44f5a9bceacaf869f0b4f);
+            
+        
+
+        circle_marker_dc2a809e21a5beca23d863474b1bf8cc.bindPopup(popup_d52f57ef8486c730efb4ca57b639007b)
+        ;
+
+        
+    
+    
+            var poly_line_03f1c3f38850f0f8fc35faf0c966888f = L.polyline(
+                [[53.4, -6.0], [53.434354854372366, -5.978528216017272], [53.45141128640691, -5.957056432034546], [53.44711692961036, -5.935584648051818], [53.488951699048, -5.91411286406909], [53.51852821601727, -5.892641080086363], [53.514233859220724, -5.871169296103635], [53.55066547333401, -5.849697512120907], [53.58870970874473, -5.82822572813818], [53.59729842233782, -5.806753944155452], [53.6, -5.8]],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "red", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+        var popup_e8ae8c521d8397bb0fc2b0808410abbb = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c57c83cdfcb5cf2e47f7c11949836ff3 = $(`<div id="html_c57c83cdfcb5cf2e47f7c11949836ff3" style="width: 100.0%; height: 100.0%;">SEA WATCH_4 (PILOT_VESSEL)</div>`)[0];
+                popup_e8ae8c521d8397bb0fc2b0808410abbb.setContent(html_c57c83cdfcb5cf2e47f7c11949836ff3);
+            
+        
+
+        poly_line_03f1c3f38850f0f8fc35faf0c966888f.bindPopup(popup_e8ae8c521d8397bb0fc2b0808410abbb)
+        ;
+
+        
+    
+    
+            var marker_e59e67aa4090a5f9bf65c11fea2df085 = L.marker(
+                [53.4, -6.0],
+                {
+}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+            var icon_84a30aa11da0f44ace6b292b17dd33f0 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "play",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_900b9bcc9be516a35a5ca0ee2d527032 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_9fc916120f3ed1fca930699f16f22e7d = $(`<div id="html_9fc916120f3ed1fca930699f16f22e7d" style="width: 100.0%; height: 100.0%;">         <b>🟢 START: SEA WATCH_4</b><br>         <b>MMSI:</b> 123456003<br>         <b>Type:</b> PILOT_VESSEL<br>         <b>Time:</b> 2025-09-10T12:35:51<br>         <b>Position:</b> 53.400000, -6.000000<br>         <b>Speed:</b> 18.0 knots         </div>`)[0];
+                popup_900b9bcc9be516a35a5ca0ee2d527032.setContent(html_9fc916120f3ed1fca930699f16f22e7d);
+            
+        
+
+        marker_e59e67aa4090a5f9bf65c11fea2df085.bindPopup(popup_900b9bcc9be516a35a5ca0ee2d527032)
+        ;
+
+        
+    
+    
+            marker_e59e67aa4090a5f9bf65c11fea2df085.bindTooltip(
+                `<div>
+                     START: SEA WATCH_4
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_e59e67aa4090a5f9bf65c11fea2df085.setIcon(icon_84a30aa11da0f44ace6b292b17dd33f0);
+            
+    
+            var marker_4d13953949ace50d868c0148401ac4bc = L.marker(
+                [53.6, -5.8],
+                {
+}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+            var icon_18e74b17f535210719d370113d6819c4 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "shield",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_bda3f9775ac01ea4ff7a42588283f7be = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_7cccc0af7413f2865141dc4b2c51f22b = $(`<div id="html_7cccc0af7413f2865141dc4b2c51f22b" style="width: 100.0%; height: 100.0%;">         <b>🔴 CURRENT: SEA WATCH_4</b><br>         <b>MMSI:</b> 123456003<br>         <b>Type:</b> PILOT_VESSEL<br>         <b>Time:</b> 2025-09-10T13:25:51<br>         <b>Position:</b> 53.600000, -5.800000<br>         <b>Speed:</b> 0.0 knots<br>         <b>Status:</b> AT_ANCHOR         </div>`)[0];
+                popup_bda3f9775ac01ea4ff7a42588283f7be.setContent(html_7cccc0af7413f2865141dc4b2c51f22b);
+            
+        
+
+        marker_4d13953949ace50d868c0148401ac4bc.bindPopup(popup_bda3f9775ac01ea4ff7a42588283f7be)
+        ;
+
+        
+    
+    
+            marker_4d13953949ace50d868c0148401ac4bc.bindTooltip(
+                `<div>
+                     CURRENT: SEA WATCH_4
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_4d13953949ace50d868c0148401ac4bc.setIcon(icon_18e74b17f535210719d370113d6819c4);
+            
+    
+            var circle_marker_812c9b9c7a6211ecfebca028bbc0ef95 = L.circleMarker(
+                [53.45141128640691, -5.957056432034546],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "red", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+        var popup_34a87d5a468a4bd05e0fab581378da9d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_354984fff5301a87d69713285cc14b6a = $(`<div id="html_354984fff5301a87d69713285cc14b6a" style="width: 100.0%; height: 100.0%;">SEA WATCH_4 - Point 3</div>`)[0];
+                popup_34a87d5a468a4bd05e0fab581378da9d.setContent(html_354984fff5301a87d69713285cc14b6a);
+            
+        
+
+        circle_marker_812c9b9c7a6211ecfebca028bbc0ef95.bindPopup(popup_34a87d5a468a4bd05e0fab581378da9d)
+        ;
+
+        
+    
+    
+            var circle_marker_b2122e80be3ea24c8264b35a830b4c8e = L.circleMarker(
+                [53.51852821601727, -5.892641080086363],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "red", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+        var popup_96a33f7a07fca5defd6c92da25b00bc8 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_6f73cfdb6da38f292d61816f3841c084 = $(`<div id="html_6f73cfdb6da38f292d61816f3841c084" style="width: 100.0%; height: 100.0%;">SEA WATCH_4 - Point 6</div>`)[0];
+                popup_96a33f7a07fca5defd6c92da25b00bc8.setContent(html_6f73cfdb6da38f292d61816f3841c084);
+            
+        
+
+        circle_marker_b2122e80be3ea24c8264b35a830b4c8e.bindPopup(popup_96a33f7a07fca5defd6c92da25b00bc8)
+        ;
+
+        
+    
+    
+            var circle_marker_3895322fa9eafc0529c188843f985795 = L.circleMarker(
+                [53.58870970874473, -5.82822572813818],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "red", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_8f20bf51a9a1e9e224db86b22b7eae34);
+        
+    
+        var popup_c148a83ee58f329b9ab655b034c57892 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_6b573aaecaf8d585da1e170330d04860 = $(`<div id="html_6b573aaecaf8d585da1e170330d04860" style="width: 100.0%; height: 100.0%;">SEA WATCH_4 - Point 9</div>`)[0];
+                popup_c148a83ee58f329b9ab655b034c57892.setContent(html_6b573aaecaf8d585da1e170330d04860);
+            
+        
+
+        circle_marker_3895322fa9eafc0529c188843f985795.bindPopup(popup_c148a83ee58f329b9ab655b034c57892)
+        ;
+
+        
+    
+    
+            map_8f20bf51a9a1e9e224db86b22b7eae34.fitBounds(
+                [[53.325661173360864, -6.2603], [53.893603838419644, -5.3028100885299825]],
+                {"padding": [20, 20]}
+            );
+        
+</script>
+</html>
