@@ -232,7 +232,7 @@ class WorldwideRoutes:
     def get_ferry_routes(cls, region: str = "mediterranean") -> List[Tuple[Position, Position, str]]:
         """Get ferry routes by region"""
         if region.lower() == "irish_sea":
-        return [
+            return [
             (cls.DUBLIN, cls.HOLYHEAD, "Dublin-Holyhead Ferry"),
             (cls.BELFAST, cls.LIVERPOOL, "Belfast-Liverpool Ferry"),
             (cls.CORK, cls.SWANSEA, "Cork-Swansea Ferry"),
@@ -257,11 +257,11 @@ class WorldwideRoutes:
             # Default to Mediterranean
             return cls.get_ferry_routes("mediterranean")
     
-    @classmethod 
+    @classmethod
     def get_cargo_routes(cls, region: str = "mediterranean") -> List[Tuple[Position, Position, str]]:
         """Get cargo ship routes by region"""
         if region.lower() == "irish_sea":
-        return [
+            return [
             (cls.DUBLIN, cls.LIVERPOOL, "Dublin-Liverpool Cargo"),
             (cls.CORK, cls.CARDIFF, "Cork-Cardiff Cargo"),
             (cls.BELFAST, cls.SWANSEA, "Belfast-Swansea Container"),
@@ -288,13 +288,18 @@ class WorldwideRoutes:
                 (cls.VANCOUVER, cls.LOS_ANGELES, "West Coast Supply"),
             ]
         else:
-            return cls.get_cargo_routes("mediterranean")
+            # Fallback to Mediterranean cargo routes
+            return [
+                (cls.BARCELONA, cls.NAPLES, "Barcelona-Naples Container"),
+                (cls.MARSEILLE, cls.ATHENS, "France-Greece Cargo"),
+                (cls.VENICE, cls.ISTANBUL, "Adriatic-Bosphorus Supply"),
+            ]
     
     @classmethod
     def get_fishing_areas(cls, region: str = "mediterranean") -> List[Tuple[Position, Position, str]]:
         """Get fishing areas (circular/patrol patterns) by region"""
         if region.lower() == "irish_sea":
-        return [
+            return [
             (Position(53.7, -5.5), Position(53.9, -5.3), "North Irish Sea Grounds"),
             (Position(52.5, -5.8), Position(52.7, -5.6), "Central Irish Sea Grounds"), 
             (Position(51.8, -4.5), Position(52.0, -4.3), "Bristol Channel Grounds"),
@@ -310,13 +315,17 @@ class WorldwideRoutes:
                 (Position(38.0, 15.0), Position(38.2, 15.2), "Tyrrhenian Sea Grounds"),
             ]
         else:
-            return cls.get_fishing_areas("irish_sea")
+            # Fallback to Mediterranean fishing areas
+            return [
+                (Position(40.0, 14.0), Position(40.2, 14.2), "Mediterranean Fishing Grounds"),
+                (Position(38.0, 15.0), Position(38.2, 15.2), "Sicily Fishing Grounds"),
+            ]
     
     @classmethod
     def get_coastal_patrol_routes(cls, region: str = "mediterranean") -> List[Tuple[Position, Position, str]]:
         """Get coastal patrol routes by region"""
         if region.lower() == "irish_sea":
-        return [
+            return [
             (Position(53.4, -6.0), Position(53.6, -5.8), "Dublin Bay Patrol"),
             (Position(53.3, -4.4), Position(53.4, -4.2), "Anglesey Coast Patrol"),
             (Position(54.6, -5.8), Position(54.8, -5.6), "Belfast Lough Patrol"),
@@ -332,7 +341,11 @@ class WorldwideRoutes:
                 (Position(53.4, 9.8), Position(53.6, 10.0), "Hamburg Port Patrol"),
             ]
         else:
-            return cls.get_coastal_patrol_routes("mediterranean")
+            # Fallback to Mediterranean patrol routes
+            return [
+                (Position(41.4, 2.2), Position(41.6, 2.4), "Barcelona Coast Patrol"),
+                (Position(40.8, 14.2), Position(41.0, 14.4), "Naples Harbor Patrol"),
+            ]
 
 
 # Backward compatibility alias
@@ -689,9 +702,9 @@ class MultiShipGenerator:
         
         # Fallback: pick random from available routes
         if routes:
-        start_pos, end_pos, name = random.choice(routes)
-        route = Route(start_pos, end_pos, 12.0)
-        return route, f"{name}_{len(routes_used)}"
+            start_pos, end_pos, name = random.choice(routes)
+            route = Route(start_pos, end_pos, 12.0)
+            return route, f"{name}_{len(routes_used)}"
     
         # Ultimate fallback: generate basic route
         return self._generate_basic_route(route_type, len(routes_used))
