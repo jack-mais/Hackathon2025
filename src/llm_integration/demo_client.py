@@ -22,24 +22,24 @@ class AISDemo:
         # Pre-defined responses for common queries
         self.response_templates = {
             'greeting': [
-                "Hello! I'm your maritime AIS data generation assistant. I can create realistic ship movement data for the Irish Sea region.",
-                "Hi there! Ready to generate some ship data? I can create multiple vessels with realistic routes and movements.",
-                "Welcome to the AIS Generator! Tell me what kind of ships you'd like me to create."
+                "Hello! I'm your maritime AIS data generation assistant. I can create realistic ship movement data for any maritime region worldwide.",
+                "Hi there! Ready to generate some ship data? I can create multiple vessels with realistic routes and movements anywhere on Earth.",
+                "Welcome to the AIS Generator! Tell me what kind of ships and which maritime region you'd like me to create."
             ],
             'capabilities': [
-                "I can generate multiple ships with different types (passenger ferries, cargo ships, fishing vessels, patrol boats, and high-speed craft) across the Irish Sea region.",
-                "My capabilities include creating realistic ship routes between major ports like Dublin, Holyhead, Liverpool, Belfast, Cork, and Swansea, with proper AIS tracking data.",
-                "I specialize in maritime data generation - I can simulate ship movements, create realistic timing and speed profiles, and output data in JSON and NMEA formats."
+                "I can generate multiple ships with different types (passenger ferries, cargo ships, fishing vessels, patrol boats, and high-speed craft) in any maritime region worldwide.",
+                "My capabilities include creating realistic ship routes between any major ports worldwide, with proper AIS tracking data for regions like Mediterranean, North Sea, Pacific, Atlantic, and more.",
+                "I specialize in maritime data generation worldwide - I can simulate ship movements in any ocean or sea, create realistic timing and speed profiles, and output data in JSON and NMEA formats."
             ],
             'ports': [
-                "The available ports in our Irish Sea region include: Dublin, Holyhead, Liverpool, Belfast, Cork, Swansea, Isle of Man, and Cardiff.",
-                "I have 8 major ports configured: Dublin (Ireland), Holyhead (Wales), Liverpool (England), Belfast (Northern Ireland), Cork (Ireland), Swansea (Wales), Isle of Man, and Cardiff (Wales).",
-                "Our port network covers the entire Irish Sea region with major commercial and ferry terminals."
+                "I have access to major ports worldwide including commercial harbors, ferry terminals, and fishing ports across all continents and maritime regions.",
+                "My port database includes thousands of locations from major shipping hubs like Shanghai, Rotterdam, Singapore to regional ports in Mediterranean, Caribbean, Baltic Sea, and beyond.",
+                "I can work with any maritime region - just specify the area, ports, or even coordinates you're interested in."
             ],
             'ship_types': [
                 "I can generate 5 different ship types: PASSENGER ferries (12-18 knots), CARGO ships (8-12 knots), FISHING vessels (6-10 knots), PILOT_VESSEL patrol boats (15-25 knots), and HIGH_SPEED_CRAFT (20-40 knots).",
                 "Available ship types include passenger ferries for regular routes, cargo ships for commercial transport, fishing vessels with circular movement patterns, pilot vessels for harbor operations, and high-speed craft for express services.",
-                "Each ship type has realistic characteristics - ferries follow scheduled routes, cargo ships use shipping lanes, fishing boats work in circular patterns, and patrol vessels have back-and-forth movements."
+                "Each ship type has realistic characteristics - ferries follow scheduled routes, cargo ships use shipping lanes, fishing boats work in circular patterns, and patrol vessels have back-and-forth movements. All work in any maritime region worldwide."
             ]
         }
     
@@ -127,8 +127,13 @@ This shows realistic AIS tracking data with proper timestamps, coordinates, spee
             if hour_matches:
                 duration = float(hour_matches[0])
         
-        # Check for specific ports or routes
-        ports = ['dublin', 'holyhead', 'liverpool', 'belfast', 'cork', 'swansea', 'cardiff']
+        # Check for specific ports or routes - worldwide coverage
+        ports = ['dublin', 'holyhead', 'liverpool', 'belfast', 'cork', 'swansea', 'cardiff', 
+                'rotterdam', 'hamburg', 'singapore', 'shanghai', 'hong kong', 'los angeles', 
+                'new york', 'miami', 'barcelona', 'marseille', 'naples', 'venice', 'athens',
+                'istanbul', 'copenhagen', 'stockholm', 'oslo', 'helsinki', 'gdansk', 'riga',
+                'tallinn', 'st petersburg', 'murmansk', 'vladivostok', 'tokyo', 'yokohama',
+                'busan', 'incheon', 'mumbai', 'chennai', 'karachi', 'dubai', 'doha', 'kuwait']
         mentioned_ports = [port for port in ports if port in user_message.lower()]
         
         # Check for specific ship types
@@ -234,22 +239,30 @@ The generated data includes realistic AIS position reports with proper maritime 
 🚢 **AIS Ship Data Generator - DEMO MODE** (No API Keys Required!)
 
 **What I can generate:**
-• Multiple ships (1-10) with realistic Irish Sea routes
+• Multiple ships (1-10) with realistic routes in any maritime region worldwide
 • Different ship types: Passenger ferries, Cargo ships, Fishing vessels, Patrol boats, High-speed craft  
-• Custom routes between major ports: Dublin, Holyhead, Liverpool, Belfast, Cork, Swansea, etc.
+• Custom routes between any major ports worldwide or using coordinates
 • Realistic movement patterns: Ferry routes, cargo lanes, fishing circles, patrol patterns
 
 **Example requests:**
-• "Generate 3 ships in the Irish Sea"
-• "Create 2 cargo ships from Dublin to Liverpool"
-• "Show me an example"
-• "What ports are available?"
+• "Generate 3 ships in the Mediterranean"
+• "Create 2 cargo ships from Singapore to Rotterdam"  
+• "Generate fishing vessels in the North Sea"
+• "Show me ships crossing the Atlantic"
+• "Create ferries in the Caribbean"
+
+**Supported Regions:**
+🌊 **Atlantic, Pacific, Indian Ocean, Arctic Ocean**
+🏝️ **Mediterranean, Caribbean, North Sea, Baltic Sea**
+🇪🇺 **European waters, Asian maritime routes**
+🌏 **Any coordinates worldwide**
 
 **Demo Features:**
 ✅ **No API costs** - Works completely offline
 ✅ **Instant responses** - No network delays
 ✅ **Full functionality** - Real ship generation
 ✅ **Perfect for demos** - Reliable and fast
+✅ **Worldwide coverage** - Any maritime region
 
 **Output:**
 • JSON files with detailed AIS position reports
@@ -257,7 +270,7 @@ The generated data includes realistic AIS position reports with proper maritime 
 • NMEA format data for marine systems  
 • Realistic timestamps, speeds, and navigation status
 
-Just tell me what kind of maritime scenario you'd like to create!
+Just tell me what kind of maritime scenario and which region you'd like to create!
         """
 
 

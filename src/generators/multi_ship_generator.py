@@ -19,10 +19,10 @@ class RouteType(Enum):
     PATROL = "patrol"
 
 
-class IrishSeaRoutes:
-    """Predefined realistic routes in the Irish Sea"""
+class WorldwideRoutes:
+    """Worldwide maritime routes and ports"""
     
-    # Major ports
+    # Irish Sea ports (original)
     DUBLIN = Position(latitude=53.3498, longitude=-6.2603)
     HOLYHEAD = Position(latitude=53.3090, longitude=-4.6324)
     LIVERPOOL = Position(latitude=53.4084, longitude=-2.9916)
@@ -32,46 +32,180 @@ class IrishSeaRoutes:
     ISLE_OF_MAN = Position(latitude=54.1936, longitude=-4.5591)
     CARDIFF = Position(latitude=51.4816, longitude=-3.1791)
     
+    # Major European ports
+    ROTTERDAM = Position(latitude=51.9225, longitude=4.4792)
+    HAMBURG = Position(latitude=53.5511, longitude=9.9937)
+    ANTWERP = Position(latitude=51.2194, longitude=4.4025)
+    LE_HAVRE = Position(latitude=49.4944, longitude=0.1079)
+    BARCELONA = Position(latitude=41.3851, longitude=2.1734)
+    MARSEILLE = Position(latitude=43.2965, longitude=5.3698)
+    NAPLES = Position(latitude=40.8518, longitude=14.2681)
+    VENICE = Position(latitude=45.4408, longitude=12.3155)
+    ATHENS = Position(latitude=37.9755, longitude=23.7348)
+    ISTANBUL = Position(latitude=41.0082, longitude=28.9784)
+    
+    # Nordic/Baltic ports
+    COPENHAGEN = Position(latitude=55.6761, longitude=12.5683)
+    STOCKHOLM = Position(latitude=59.3293, longitude=18.0686)
+    OSLO = Position(latitude=59.9139, longitude=10.7522)
+    HELSINKI = Position(latitude=60.1699, longitude=24.9384)
+    GDANSK = Position(latitude=54.3520, longitude=18.6466)
+    
+    # Asian ports
+    SINGAPORE = Position(latitude=1.2966, longitude=103.7764)
+    SHANGHAI = Position(latitude=31.2304, longitude=121.4737)
+    HONG_KONG = Position(latitude=22.3193, longitude=114.1694)
+    TOKYO = Position(latitude=35.6762, longitude=139.6503)
+    BUSAN = Position(latitude=35.1796, longitude=129.0756)
+    MUMBAI = Position(latitude=19.0760, longitude=72.8777)
+    DUBAI = Position(latitude=25.2048, longitude=55.2708)
+    
+    # North American ports
+    NEW_YORK = Position(latitude=40.7128, longitude=-74.0060)
+    LOS_ANGELES = Position(latitude=33.7391, longitude=-118.2668)
+    MIAMI = Position(latitude=25.7617, longitude=-80.1918)
+    VANCOUVER = Position(latitude=49.2827, longitude=-123.1207)
+    MONTREAL = Position(latitude=45.5017, longitude=-73.5673)
+    
     @classmethod
-    def get_ferry_routes(cls) -> List[Tuple[Position, Position, str]]:
-        """Get common ferry routes with names"""
-        return [
-            (cls.DUBLIN, cls.HOLYHEAD, "Dublin-Holyhead Ferry"),
-            (cls.BELFAST, cls.LIVERPOOL, "Belfast-Liverpool Ferry"),
-            (cls.CORK, cls.SWANSEA, "Cork-Swansea Ferry"),
-            (cls.DUBLIN, cls.ISLE_OF_MAN, "Dublin-Isle of Man"),
-            (cls.HOLYHEAD, cls.DUBLIN, "Holyhead-Dublin Ferry"),
-            (cls.LIVERPOOL, cls.BELFAST, "Liverpool-Belfast Ferry"),
-        ]
+    def get_all_ports(cls) -> Dict[str, Position]:
+        """Get all available ports worldwide"""
+        ports = {}
+        for attr_name in dir(cls):
+            attr = getattr(cls, attr_name)
+            if isinstance(attr, Position) and not attr_name.startswith('_'):
+                ports[attr_name] = attr
+        return ports
+    
+    @classmethod
+    def get_ports_by_region(cls, region: str = "irish_sea") -> Dict[str, Position]:
+        """Get ports filtered by region"""
+        all_ports = cls.get_all_ports()
+        
+        region_filters = {
+            "irish_sea": ["DUBLIN", "HOLYHEAD", "LIVERPOOL", "BELFAST", "CORK", "SWANSEA", "ISLE_OF_MAN", "CARDIFF"],
+            "europe": ["ROTTERDAM", "HAMBURG", "ANTWERP", "LE_HAVRE", "BARCELONA", "MARSEILLE", "NAPLES", "VENICE"],
+            "mediterranean": ["BARCELONA", "MARSEILLE", "NAPLES", "VENICE", "ATHENS", "ISTANBUL"],
+            "nordic": ["COPENHAGEN", "STOCKHOLM", "OSLO", "HELSINKI", "GDANSK"],
+            "asia": ["SINGAPORE", "SHANGHAI", "HONG_KONG", "TOKYO", "BUSAN", "MUMBAI", "DUBAI"],
+            "north_america": ["NEW_YORK", "LOS_ANGELES", "MIAMI", "VANCOUVER", "MONTREAL"]
+        }
+        
+        if region.lower() in region_filters:
+            filtered = {name: all_ports[name] for name in region_filters[region.lower()] if name in all_ports}
+            return filtered
+        
+        return all_ports  # Return all if region not found
+    
+    @classmethod
+    def get_ferry_routes(cls, region: str = "irish_sea") -> List[Tuple[Position, Position, str]]:
+        """Get ferry routes by region"""
+        if region.lower() == "irish_sea":
+            return [
+                (cls.DUBLIN, cls.HOLYHEAD, "Dublin-Holyhead Ferry"),
+                (cls.BELFAST, cls.LIVERPOOL, "Belfast-Liverpool Ferry"),
+                (cls.CORK, cls.SWANSEA, "Cork-Swansea Ferry"),
+                (cls.DUBLIN, cls.ISLE_OF_MAN, "Dublin-Isle of Man"),
+                (cls.HOLYHEAD, cls.DUBLIN, "Holyhead-Dublin Ferry"),
+                (cls.LIVERPOOL, cls.BELFAST, "Liverpool-Belfast Ferry"),
+            ]
+        elif region.lower() == "mediterranean":
+            return [
+                (cls.BARCELONA, cls.MARSEILLE, "Barcelona-Marseille Ferry"),
+                (cls.NAPLES, cls.ATHENS, "Naples-Athens Ferry"), 
+                (cls.VENICE, cls.ISTANBUL, "Venice-Istanbul Ferry"),
+                (cls.MARSEILLE, cls.BARCELONA, "Marseille-Barcelona Ferry"),
+            ]
+        elif region.lower() == "nordic":
+            return [
+                (cls.COPENHAGEN, cls.STOCKHOLM, "Copenhagen-Stockholm Ferry"),
+                (cls.OSLO, cls.COPENHAGEN, "Oslo-Copenhagen Ferry"),
+                (cls.HELSINKI, cls.STOCKHOLM, "Helsinki-Stockholm Ferry"),
+            ]
+        else:
+            # Default to Irish Sea
+            return cls.get_ferry_routes("irish_sea")
     
     @classmethod 
-    def get_cargo_routes(cls) -> List[Tuple[Position, Position, str]]:
-        """Get cargo ship routes"""
-        return [
-            (cls.DUBLIN, cls.LIVERPOOL, "Dublin-Liverpool Cargo"),
-            (cls.CORK, cls.CARDIFF, "Cork-Cardiff Cargo"),
-            (cls.BELFAST, cls.SWANSEA, "Belfast-Swansea Container"),
-            (cls.LIVERPOOL, cls.DUBLIN, "Liverpool-Dublin Supply"),
-        ]
+    def get_cargo_routes(cls, region: str = "irish_sea") -> List[Tuple[Position, Position, str]]:
+        """Get cargo ship routes by region"""
+        if region.lower() == "irish_sea":
+            return [
+                (cls.DUBLIN, cls.LIVERPOOL, "Dublin-Liverpool Cargo"),
+                (cls.CORK, cls.CARDIFF, "Cork-Cardiff Cargo"),
+                (cls.BELFAST, cls.SWANSEA, "Belfast-Swansea Container"),
+                (cls.LIVERPOOL, cls.DUBLIN, "Liverpool-Dublin Supply"),
+            ]
+        elif region.lower() == "europe":
+            return [
+                (cls.ROTTERDAM, cls.HAMBURG, "Rotterdam-Hamburg Container"),
+                (cls.ANTWERP, cls.LE_HAVRE, "Antwerp-Le Havre Cargo"),
+                (cls.HAMBURG, cls.ROTTERDAM, "Hamburg-Rotterdam Supply"),
+                (cls.BARCELONA, cls.MARSEILLE, "Barcelona-Marseille Freight"),
+            ]
+        elif region.lower() == "asia":
+            return [
+                (cls.SINGAPORE, cls.HONG_KONG, "Singapore-Hong Kong Container"),
+                (cls.SHANGHAI, cls.TOKYO, "Shanghai-Tokyo Cargo"),
+                (cls.MUMBAI, cls.DUBAI, "Mumbai-Dubai Trade"),
+                (cls.HONG_KONG, cls.SINGAPORE, "Hong Kong-Singapore Supply"),
+            ]
+        elif region.lower() == "north_america":
+            return [
+                (cls.LOS_ANGELES, cls.NEW_YORK, "Trans-US Container"),
+                (cls.MIAMI, cls.NEW_YORK, "East Coast Cargo"),
+                (cls.VANCOUVER, cls.LOS_ANGELES, "West Coast Supply"),
+            ]
+        else:
+            return cls.get_cargo_routes("irish_sea")
     
     @classmethod
-    def get_fishing_areas(cls) -> List[Tuple[Position, Position, str]]:
-        """Get fishing areas (circular/patrol patterns)"""
-        # Fishing grounds in Irish Sea
-        return [
-            (Position(53.7, -5.5), Position(53.9, -5.3), "North Irish Sea Grounds"),
-            (Position(52.5, -5.8), Position(52.7, -5.6), "Central Irish Sea Grounds"), 
-            (Position(51.8, -4.5), Position(52.0, -4.3), "Bristol Channel Grounds"),
-        ]
+    def get_fishing_areas(cls, region: str = "irish_sea") -> List[Tuple[Position, Position, str]]:
+        """Get fishing areas (circular/patrol patterns) by region"""
+        if region.lower() == "irish_sea":
+            return [
+                (Position(53.7, -5.5), Position(53.9, -5.3), "North Irish Sea Grounds"),
+                (Position(52.5, -5.8), Position(52.7, -5.6), "Central Irish Sea Grounds"), 
+                (Position(51.8, -4.5), Position(52.0, -4.3), "Bristol Channel Grounds"),
+            ]
+        elif region.lower() == "north_sea":
+            return [
+                (Position(56.0, 3.0), Position(56.2, 3.2), "Dogger Bank Grounds"),
+                (Position(54.5, 2.0), Position(54.7, 2.2), "Yorkshire Fishing Grounds"),
+            ]
+        elif region.lower() == "mediterranean":
+            return [
+                (Position(42.0, 3.0), Position(42.2, 3.2), "Balearic Sea Grounds"),
+                (Position(38.0, 15.0), Position(38.2, 15.2), "Tyrrhenian Sea Grounds"),
+            ]
+        else:
+            return cls.get_fishing_areas("irish_sea")
     
     @classmethod
-    def get_coastal_patrol_routes(cls) -> List[Tuple[Position, Position, str]]:
-        """Get coastal patrol routes"""
-        return [
-            (Position(53.4, -6.0), Position(53.6, -5.8), "Dublin Bay Patrol"),
-            (Position(53.3, -4.4), Position(53.4, -4.2), "Anglesey Coast Patrol"),
-            (Position(54.6, -5.8), Position(54.8, -5.6), "Belfast Lough Patrol"),
-        ]
+    def get_coastal_patrol_routes(cls, region: str = "irish_sea") -> List[Tuple[Position, Position, str]]:
+        """Get coastal patrol routes by region"""
+        if region.lower() == "irish_sea":
+            return [
+                (Position(53.4, -6.0), Position(53.6, -5.8), "Dublin Bay Patrol"),
+                (Position(53.3, -4.4), Position(53.4, -4.2), "Anglesey Coast Patrol"),
+                (Position(54.6, -5.8), Position(54.8, -5.6), "Belfast Lough Patrol"),
+            ]
+        elif region.lower() == "mediterranean":
+            return [
+                (Position(41.9, 2.5), Position(42.1, 2.7), "Barcelona Coast Patrol"),
+                (Position(43.3, 5.2), Position(43.5, 5.4), "Marseille Harbor Patrol"),
+            ]
+        elif region.lower() == "north_sea":
+            return [
+                (Position(51.8, 4.3), Position(52.0, 4.5), "Rotterdam Harbor Patrol"),
+                (Position(53.4, 9.8), Position(53.6, 10.0), "Hamburg Port Patrol"),
+            ]
+        else:
+            return cls.get_coastal_patrol_routes("irish_sea")
+
+
+# Backward compatibility alias
+IrishSeaRoutes = WorldwideRoutes
 
 
 class RealisticShipMovement(SimpleShipMovement):
@@ -348,9 +482,14 @@ class MultiShipGenerator:
     def __init__(self):
         self.active_ships: List[RealisticShipMovement] = []
         self.ship_counter = 123456000  # Starting MMSI range
+        self.routes_class = WorldwideRoutes
     
     def generate_irish_sea_scenario(self, num_ships: int = 3) -> List[RealisticShipMovement]:
         """Generate multiple ships in Irish Sea with realistic routes"""
+        return self.generate_maritime_scenario(num_ships, region="irish_sea")
+    
+    def generate_maritime_scenario(self, num_ships: int = 3, region: str = "irish_sea") -> List[RealisticShipMovement]:
+        """Generate multiple ships in any maritime region with realistic routes"""
         
         ships = []
         routes_used = set()
@@ -359,13 +498,13 @@ class MultiShipGenerator:
             # Choose ship type
             ship_type, route_type = self._choose_ship_and_route_type(i, num_ships)
             
-            # Get route based on type
-            route, route_name = self._get_route_for_type(route_type, routes_used)
+            # Get route based on type and region
+            route, route_name = self._get_route_for_type(route_type, routes_used, region)
             routes_used.add(route_name)
             
             # Create ship
             mmsi = self.ship_counter + i
-            ship_name = self._generate_ship_name(ship_type, i)
+            ship_name = self._generate_ship_name(ship_type, i, region)
             
             ship = RealisticShipMovement(route, mmsi, ship_name, ship_type, route_type)
             ships.append(ship)
@@ -389,19 +528,19 @@ class MultiShipGenerator:
         combo_index = ship_index % len(type_combinations)
         return type_combinations[combo_index]
     
-    def _get_route_for_type(self, route_type: RouteType, routes_used: set) -> Tuple[Route, str]:
-        """Get a route based on the route type"""
+    def _get_route_for_type(self, route_type: RouteType, routes_used: set, region: str = "irish_sea") -> Tuple[Route, str]:
+        """Get a route based on the route type and region"""
         
         if route_type == RouteType.FERRY:
-            routes = IrishSeaRoutes.get_ferry_routes()
+            routes = self.routes_class.get_ferry_routes(region)
         elif route_type == RouteType.CARGO:
-            routes = IrishSeaRoutes.get_cargo_routes()
+            routes = self.routes_class.get_cargo_routes(region)
         elif route_type == RouteType.FISHING:
-            routes = IrishSeaRoutes.get_fishing_areas()
+            routes = self.routes_class.get_fishing_areas(region)
         elif route_type == RouteType.PATROL:
-            routes = IrishSeaRoutes.get_coastal_patrol_routes()
+            routes = self.routes_class.get_coastal_patrol_routes(region)
         else:  # COASTAL
-            routes = IrishSeaRoutes.get_ferry_routes()  # Use ferry routes but different behavior
+            routes = self.routes_class.get_ferry_routes(region)  # Use ferry routes but different behavior
         
         # Try to find unused route
         for start_pos, end_pos, name in routes:
@@ -414,22 +553,53 @@ class MultiShipGenerator:
         route = Route(start_pos, end_pos, 12.0)
         return route, f"{name}_{len(routes_used)}"
     
-    def _generate_ship_name(self, ship_type: ShipType, index: int) -> str:
-        """Generate realistic ship name based on type"""
+    def _generate_ship_name(self, ship_type: ShipType, index: int, region: str = "irish_sea") -> str:
+        """Generate realistic ship name based on type and region"""
         
-        ferry_names = ["CELTIC SEA", "IRISH ROVER", "EMERALD PRINCESS", "DUBLIN BAY", "WALES EXPRESS"]
-        cargo_names = ["ATLANTIC TRADER", "IRISH CARGO", "CELTIC CONTAINER", "MERCHANT VOYAGER", "SUPPLY MASTER"] 
-        fishing_names = ["NEPTUNE'S CATCH", "SEA HUNTER", "ATLANTIC FISHER", "IRISH PRIDE", "OCEAN HARVEST"]
-        patrol_names = ["COAST GUARD 1", "PATROL VESSEL", "GUARDIAN", "SEA WATCH", "MARITIME PATROL"]
-        fast_names = ["SPEED DEMON", "FAST CAT", "SWIFT CURRENT", "RAPID TRANSIT", "QUICK SILVER"]
-        
-        name_lists = {
-            ShipType.PASSENGER: ferry_names,
-            ShipType.CARGO: cargo_names,
-            ShipType.FISHING: fishing_names,
-            ShipType.PILOT_VESSEL: patrol_names,
-            ShipType.HIGH_SPEED_CRAFT: fast_names,
+        # Region-specific name variations
+        name_prefixes = {
+            "irish_sea": {
+                "passenger": ["CELTIC SEA", "IRISH ROVER", "EMERALD PRINCESS", "DUBLIN BAY", "WALES EXPRESS"],
+                "cargo": ["ATLANTIC TRADER", "IRISH CARGO", "CELTIC CONTAINER", "MERCHANT VOYAGER", "SUPPLY MASTER"],
+                "fishing": ["NEPTUNE'S CATCH", "SEA HUNTER", "ATLANTIC FISHER", "IRISH PRIDE", "OCEAN HARVEST"],
+                "patrol": ["COAST GUARD", "PATROL VESSEL", "GUARDIAN", "SEA WATCH", "MARITIME PATROL"],
+                "fast": ["SPEED DEMON", "FAST CAT", "SWIFT CURRENT", "RAPID TRANSIT", "QUICK SILVER"]
+            },
+            "mediterranean": {
+                "passenger": ["MEDITERRANEAN STAR", "AZURE PRINCESS", "BLUE COAST", "RIVIERA EXPRESS", "SUNSET FERRY"],
+                "cargo": ["EUROPA TRADER", "MEDITERRANEAN CARGO", "POSEIDON CONTAINER", "APOLLO FREIGHT", "TITAN SUPPLY"],
+                "fishing": ["MEDITERRANEAN CATCH", "AEGEAN FISHER", "BLUE WATER", "ANCIENT MARINER", "GOLDEN NET"],
+                "patrol": ["MEDITERRANEAN PATROL", "COASTAL GUARDIAN", "BLUE SHIELD", "SEA PROTECTOR", "HARBOR WATCH"],
+                "fast": ["MEDITERRANEAN ARROW", "BLUE LIGHTNING", "COASTAL RACER", "AZURE SPEED", "RAPID MEDITERRANEAN"]
+            },
+            "north_sea": {
+                "passenger": ["NORTH SEA STAR", "NORDIC PRINCESS", "BALTIC FERRY", "SCANDINAVIAN EXPRESS", "VIKING VOYAGER"],
+                "cargo": ["NORTH SEA TRADER", "BALTIC CARGO", "NORDIC CONTAINER", "SCANDINAVIAN FREIGHT", "VIKING SUPPLY"],
+                "fishing": ["NORTH SEA CATCH", "NORDIC FISHER", "BALTIC HUNTER", "SCANDINAVIAN NETS", "VIKING HARVEST"],
+                "patrol": ["NORTH SEA PATROL", "NORDIC GUARDIAN", "BALTIC WATCH", "SCANDINAVIAN SHIELD", "VIKING PROTECTOR"],
+                "fast": ["NORTH SEA ARROW", "NORDIC LIGHTNING", "BALTIC SPEED", "SCANDINAVIAN RACER", "VIKING SWIFT"]
+            },
+            "asia": {
+                "passenger": ["PACIFIC STAR", "ASIAN PRINCESS", "ORIENT EXPRESS", "PACIFIC VOYAGER", "EASTERN FERRY"],
+                "cargo": ["PACIFIC TRADER", "ASIAN CARGO", "ORIENT CONTAINER", "TRANSPACIFIC FREIGHT", "EASTERN SUPPLY"],
+                "fishing": ["PACIFIC CATCH", "ASIAN FISHER", "ORIENT NETS", "DRAGON BOAT", "EASTERN HARVEST"],
+                "patrol": ["PACIFIC PATROL", "ASIAN GUARDIAN", "ORIENT WATCH", "DRAGON SHIELD", "EASTERN PROTECTOR"],
+                "fast": ["PACIFIC ARROW", "ASIAN LIGHTNING", "ORIENT SPEED", "DRAGON RACER", "EASTERN SWIFT"]
+            }
         }
         
-        names = name_lists.get(ship_type, cargo_names)
+        # Map ship types to name categories
+        type_to_category = {
+            ShipType.PASSENGER: "passenger",
+            ShipType.CARGO: "cargo",
+            ShipType.FISHING: "fishing",
+            ShipType.PILOT_VESSEL: "patrol",
+            ShipType.HIGH_SPEED_CRAFT: "fast",
+        }
+        
+        # Get names for region and type, fallback to irish_sea if region not found
+        region_names = name_prefixes.get(region.lower(), name_prefixes["irish_sea"])
+        category = type_to_category.get(ship_type, "cargo")
+        names = region_names.get(category, region_names["cargo"])
+        
         return f"{names[index % len(names)]}_{index + 1}"

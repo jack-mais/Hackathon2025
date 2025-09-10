@@ -31,27 +31,28 @@ class AISGeminiClient:
         # System prompt for Gemini
         self.system_context = """You are an expert maritime AIS (Automatic Identification System) data generator assistant.
 
-You help users generate realistic ship movement data for the Irish Sea region. You can:
-1. Generate multiple ships with realistic routes in the Irish Sea
-2. Create custom ships with specific types and routes  
+You help users generate realistic ship movement data for any maritime region worldwide. You can:
+1. Generate multiple ships with realistic routes in specified regions or worldwide
+2. Create custom ships with specific types and routes between any ports
 3. List available ports and ship types
 4. Save all generated data to JSON files for analysis
 
-Available ports: Dublin, Holyhead, Liverpool, Belfast, Cork, Swansea, Isle of Man, Cardiff
-Available ship types: PASSENGER (ferries), CARGO (container/bulk), FISHING (trawlers), PILOT_VESSEL (patrol/pilot), HIGH_SPEED_CRAFT (fast boats)
+You support a wide range of ports worldwide including major commercial ports, ferry terminals, and fishing harbors across all continents. Available ship types: PASSENGER (ferries), CARGO (container/bulk), FISHING (trawlers), PILOT_VESSEL (patrol/pilot), HIGH_SPEED_CRAFT (fast boats).
 
 When users ask for ship generation, determine what tools to call based on their request:
 
 TOOLS AVAILABLE:
-1. generate_irish_sea_scenario - For general requests like "generate 3 ships"
+1. generate_irish_sea_scenario - For general requests (still supports Irish Sea as default region)
    Parameters: num_ships, duration_hours, report_interval_minutes, scenario_name
 
-2. generate_custom_ships - For specific ship requests like "create 1 cargo ship from Dublin to Liverpool"
+2. generate_custom_ships - For specific ship requests with custom routes anywhere worldwide
    Parameters: ships[] (with ship_type, start_port, end_port), duration_hours, scenario_name
 
 3. list_available_ports - To show available ports
 
 4. get_ship_types - To show available ship types
+
+You can handle requests for any maritime region including Mediterranean, North Sea, Atlantic, Pacific, Indian Ocean, Caribbean, Baltic Sea, and many others. Users can specify regions, ports, or even exact coordinates. Ask clarifying questions if you need more specific location information.
 
 Respond conversationally and always mention that data is saved to JSON files and can be visualized on maps.
 """
@@ -121,8 +122,13 @@ Please respond helpfully about AIS ship generation. If they're asking for inform
             numbers = re.findall(r'\d+', user_message)
             num_ships = int(numbers[0]) if numbers else 3
             
-            # Check for specific routes
-            ports = ['dublin', 'holyhead', 'liverpool', 'belfast', 'cork', 'swansea', 'cardiff']
+            # Check for specific routes - worldwide ports
+            ports = ['dublin', 'holyhead', 'liverpool', 'belfast', 'cork', 'swansea', 'cardiff', 
+                    'rotterdam', 'hamburg', 'singapore', 'shanghai', 'hong kong', 'los angeles', 
+                    'new york', 'miami', 'barcelona', 'marseille', 'naples', 'venice', 'athens',
+                    'istanbul', 'copenhagen', 'stockholm', 'oslo', 'helsinki', 'gdansk', 'riga',
+                    'tallinn', 'st petersburg', 'murmansk', 'vladivostok', 'tokyo', 'yokohama',
+                    'busan', 'incheon', 'mumbai', 'chennai', 'karachi', 'dubai', 'doha', 'kuwait']
             mentioned_ports = [port for port in ports if port in user_message]
             
             # Check for specific ship types

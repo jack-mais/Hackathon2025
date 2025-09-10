@@ -55,6 +55,43 @@ class AISMCPServer:
                 }
             },
             
+            "generate_maritime_scenario": {
+                "description": "Generate multiple ships in any maritime region worldwide with realistic routes",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "num_ships": {
+                            "type": "integer",
+                            "description": "Number of ships to generate (1-10)",
+                            "minimum": 1,
+                            "maximum": 10
+                        },
+                        "region": {
+                            "type": "string",
+                            "description": "Maritime region (irish_sea, mediterranean, north_sea, nordic, asia, north_america, europe)",
+                            "default": "irish_sea",
+                            "enum": ["irish_sea", "mediterranean", "north_sea", "nordic", "asia", "north_america", "europe"]
+                        },
+                        "duration_hours": {
+                            "type": "number",
+                            "description": "How long to simulate movement in hours",
+                            "default": 2.0
+                        },
+                        "report_interval_minutes": {
+                            "type": "integer", 
+                            "description": "Interval between AIS reports in minutes",
+                            "default": 5
+                        },
+                        "scenario_name": {
+                            "type": "string",
+                            "description": "Name for the generated scenario",
+                            "default": "maritime_scenario"
+                        }
+                    },
+                    "required": ["num_ships"]
+                }
+            },
+            
             "generate_custom_ships": {
                 "description": "Generate ships with specific types and routes",
                 "parameters": {
@@ -105,10 +142,16 @@ class AISMCPServer:
             },
             
             "list_available_ports": {
-                "description": "List all available ports in the Irish Sea",
+                "description": "List all available ports worldwide or in a specific region",
                 "parameters": {
                     "type": "object",
-                    "properties": {}
+                    "properties": {
+                        "region": {
+                            "type": "string",
+                            "description": "Maritime region to filter by (optional, returns all if not specified)",
+                            "enum": ["irish_sea", "mediterranean", "north_sea", "nordic", "asia", "north_america", "europe", "all"]
+                        }
+                    }
                 }
             },
             
@@ -134,6 +177,8 @@ class AISMCPServer:
         try:
             if tool_name == "generate_irish_sea_scenario":
                 return await self._generate_irish_sea_scenario(parameters)
+            elif tool_name == "generate_maritime_scenario":
+                return await self._generate_maritime_scenario(parameters)
             elif tool_name == "generate_custom_ships":
                 return await self._generate_custom_ships(parameters)
             elif tool_name == "list_available_ports":
@@ -159,6 +204,25 @@ class AISMCPServer:
         
         # Generate ships
         ships = self.generator.generate_irish_sea_scenario(num_ships)
+        
+        return await self._process_ship_generation(ships, duration_hours, report_interval_minutes, scenario_name, "irish_sea")
+    
+    async def _generate_maritime_scenario(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate maritime scenario in any region worldwide"""
+        
+        num_ships = params.get("num_ships", 3)
+        region = params.get("region", "irish_sea")
+        duration_hours = params.get("duration_hours", 2.0)
+        report_interval_minutes = params.get("report_interval_minutes", 5)
+        scenario_name = params.get("scenario_name", f"{region}_scenario")
+        
+        # Generate ships for the specified region
+        ships = self.generator.generate_maritime_scenario(num_ships, region)
+        
+        return await self._process_ship_generation(ships, duration_hours, report_interval_minutes, scenario_name, region)
+    
+    async def _process_ship_generation(self, ships: List, duration_hours: float, report_interval_minutes: int, scenario_name: str, region: str) -> Dict[str, Any]:
+        """Common processing for ship generation"""
         
         # Generate movement data
         all_ship_data = {}
@@ -190,12 +254,13 @@ class AISMCPServer:
         return {
             "success": True,
             "scenario_name": scenario_name,
+            "region": region,
             "ships_generated": len(ships),
             "duration_hours": duration_hours,
             "report_interval_minutes": report_interval_minutes,
             "ships": ship_summaries,
             "saved_files": saved_files,
-            "message": f"Generated {len(ships)} ships in Irish Sea scenario. Data saved to {saved_files.get('json', 'file')}"
+            "message": f"Generated {len(ships)} ships in {region} scenario. Data saved to {saved_files.get('json', 'file')}"
         }
     
     async def _generate_custom_ships(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -288,25 +353,91 @@ class AISMCPServer:
         }
     
     async def _list_available_ports(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """List all available ports"""
+        """List available ports worldwide or in a specific region"""
         
-        ports = {
-            "DUBLIN": {"lat": 53.3498, "lon": -6.2603, "country": "Ireland"},
-            "HOLYHEAD": {"lat": 53.3090, "lon": -4.6324, "country": "Wales"},
-            "LIVERPOOL": {"lat": 53.4084, "lon": -2.9916, "country": "England"},
-            "BELFAST": {"lat": 54.5973, "lon": -5.9301, "country": "Northern Ireland"},
-            "CORK": {"lat": 51.8969, "lon": -8.4863, "country": "Ireland"},
-            "SWANSEA": {"lat": 51.6214, "lon": -3.9436, "country": "Wales"},
-            "ISLE_OF_MAN": {"lat": 54.1936, "lon": -4.5591, "country": "Isle of Man"},
-            "CARDIFF": {"lat": 51.4816, "lon": -3.1791, "country": "Wales"}
-        }
+        region = params.get("region", "all")
+        
+        # Get ports from the worldwide routes
+        from ..generators.multi_ship_generator import WorldwideRoutes
+        
+        if region == "all" or region is None:
+            # Return all ports
+            all_ports = WorldwideRoutes.get_all_ports()
+        else:
+            # Return ports for specific region
+            all_ports = WorldwideRoutes.get_ports_by_region(region)
+        
+        # Convert to response format with additional metadata
+        ports = {}
+        for name, position in all_ports.items():
+            # Add region/country info based on port location
+            country_info = self._get_port_country_info(name)
+            ports[name] = {
+                "latitude": position.latitude,
+                "longitude": position.longitude,
+                **country_info
+            }
+        
+        region_text = f"in the {region} region" if region != "all" else "worldwide"
         
         return {
             "success": True,
+            "region": region,
             "ports": ports,
             "total_ports": len(ports),
-            "message": f"Available ports in the Irish Sea region: {', '.join(ports.keys())}"
+            "message": f"Available ports {region_text}: {', '.join(ports.keys())}"
         }
+    
+    def _get_port_country_info(self, port_name: str) -> Dict[str, str]:
+        """Get country/region info for a port"""
+        port_countries = {
+            # Irish Sea
+            "DUBLIN": {"country": "Ireland", "region": "Irish Sea"},
+            "CORK": {"country": "Ireland", "region": "Irish Sea"},
+            "LIVERPOOL": {"country": "England", "region": "Irish Sea"},
+            "HOLYHEAD": {"country": "Wales", "region": "Irish Sea"},
+            "BELFAST": {"country": "Northern Ireland", "region": "Irish Sea"},
+            "SWANSEA": {"country": "Wales", "region": "Irish Sea"},
+            "CARDIFF": {"country": "Wales", "region": "Irish Sea"},
+            "ISLE_OF_MAN": {"country": "Isle of Man", "region": "Irish Sea"},
+            
+            # European
+            "ROTTERDAM": {"country": "Netherlands", "region": "North Sea"},
+            "HAMBURG": {"country": "Germany", "region": "North Sea"},
+            "ANTWERP": {"country": "Belgium", "region": "North Sea"},
+            "LE_HAVRE": {"country": "France", "region": "English Channel"},
+            "BARCELONA": {"country": "Spain", "region": "Mediterranean"},
+            "MARSEILLE": {"country": "France", "region": "Mediterranean"},
+            "NAPLES": {"country": "Italy", "region": "Mediterranean"},
+            "VENICE": {"country": "Italy", "region": "Mediterranean"},
+            "ATHENS": {"country": "Greece", "region": "Mediterranean"},
+            "ISTANBUL": {"country": "Turkey", "region": "Mediterranean"},
+            
+            # Nordic/Baltic
+            "COPENHAGEN": {"country": "Denmark", "region": "Baltic Sea"},
+            "STOCKHOLM": {"country": "Sweden", "region": "Baltic Sea"},
+            "OSLO": {"country": "Norway", "region": "North Sea"},
+            "HELSINKI": {"country": "Finland", "region": "Baltic Sea"},
+            "GDANSK": {"country": "Poland", "region": "Baltic Sea"},
+            
+            # Asian
+            "SINGAPORE": {"country": "Singapore", "region": "Southeast Asia"},
+            "SHANGHAI": {"country": "China", "region": "East Asia"},
+            "HONG_KONG": {"country": "Hong Kong", "region": "East Asia"},
+            "TOKYO": {"country": "Japan", "region": "East Asia"},
+            "BUSAN": {"country": "South Korea", "region": "East Asia"},
+            "MUMBAI": {"country": "India", "region": "Indian Ocean"},
+            "DUBAI": {"country": "UAE", "region": "Persian Gulf"},
+            
+            # North American
+            "NEW_YORK": {"country": "USA", "region": "North Atlantic"},
+            "LOS_ANGELES": {"country": "USA", "region": "North Pacific"},
+            "MIAMI": {"country": "USA", "region": "Caribbean"},
+            "VANCOUVER": {"country": "Canada", "region": "North Pacific"},
+            "MONTREAL": {"country": "Canada", "region": "St. Lawrence"}
+        }
+        
+        return port_countries.get(port_name, {"country": "Unknown", "region": "Unknown"})
     
     async def _get_ship_types(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Get information about ship types"""
