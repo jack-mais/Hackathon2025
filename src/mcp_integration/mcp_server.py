@@ -69,9 +69,9 @@ class AISMCPServer:
                         },
                         "region": {
                             "type": "string",
-                            "description": "Maritime region (irish_sea, mediterranean, north_sea, nordic, asia, north_america, europe)",
-                            "default": "irish_sea",
-                            "enum": ["irish_sea", "mediterranean", "north_sea", "nordic", "asia", "north_america", "europe"]
+                            "description": "Maritime region (mediterranean, north_sea, nordic, asia, north_america, europe, irish_sea)",
+                            "default": "mediterranean",
+                            "enum": ["mediterranean", "north_sea", "nordic", "asia", "north_america", "europe", "irish_sea"]
                         },
                         "duration_hours": {
                             "type": "number",
@@ -150,7 +150,7 @@ class AISMCPServer:
                         "region": {
                             "type": "string",
                             "description": "Maritime region to filter by (optional, returns all if not specified)",
-                            "enum": ["irish_sea", "mediterranean", "north_sea", "nordic", "asia", "north_america", "europe", "all"]
+                            "enum": ["mediterranean", "north_sea", "nordic", "asia", "north_america", "europe", "irish_sea", "all"]
                         }
                     }
                 }
@@ -221,7 +221,7 @@ class AISMCPServer:
                         "region": {
                             "type": "string",
                             "description": "Maritime region for the scenario",
-                            "default": "irish_sea"
+                            "default": "mediterranean"
                         },
                         "duration_hours": {
                             "type": "number",
@@ -299,7 +299,7 @@ class AISMCPServer:
         """Generate maritime scenario in any region worldwide"""
         
         num_ships = params.get("num_ships", 3)
-        region = params.get("region", "irish_sea")
+        region = params.get("region", "mediterranean")
         duration_hours = params.get("duration_hours", 2.0)
         report_interval_minutes = params.get("report_interval_minutes", 5)
         scenario_name = params.get("scenario_name", f"{region}_scenario")
@@ -648,7 +648,7 @@ class AISMCPServer:
         
         scenario_type = params.get("scenario_type", "convoy")
         num_ships = params.get("num_ships", 5)
-        region = params.get("region", "irish_sea")
+        region = params.get("region", "mediterranean")
         duration_hours = params.get("duration_hours", 3.0)
         special_params = params.get("special_parameters", {})
         scenario_name = params.get("scenario_name", f"{scenario_type}_scenario")

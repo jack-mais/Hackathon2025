@@ -62,7 +62,7 @@ class AISDemo:
             result = await self.mcp_server.call_tool("list_available_ports", {})
             if result["success"]:
                 ports = list(result["ports"].keys())
-                return f"✅ I have access to {len(ports)} ports in the Irish Sea region: {', '.join(ports)}. Each port has specific coordinates and can serve as start or end points for ship routes."
+                return f"✅ I have access to {len(ports)} ports worldwide: {', '.join(ports)}. These ports span multiple maritime regions and can serve as start or end points for ship routes."
             else:
                 return random.choice(self.response_templates['ports'])
         
@@ -365,7 +365,7 @@ The generated data includes realistic AIS position reports with proper maritime 
             # This could be enhanced with actual coordinate-based generation
             return ('generate_maritime_scenario', {
                 'num_ships': scenario_details['num_ships'],
-                'region': scenario_details['region'] or 'irish_sea',
+                'region': scenario_details['region'] or 'mediterranean',
                 'duration_hours': scenario_details['duration'],
                 'scenario_name': scenario_details['scenario_name']
             })
@@ -374,16 +374,17 @@ The generated data includes realistic AIS position reports with proper maritime 
         elif scenario_details['region'] or scenario_details['ship_types']:
             return ('generate_maritime_scenario', {
                 'num_ships': scenario_details['num_ships'],
-                'region': scenario_details['region'] or 'irish_sea',
+                'region': scenario_details['region'] or 'mediterranean',
                 'duration_hours': scenario_details['duration'],
                 'scenario_name': scenario_details['scenario_name'],
                 'location_hint': scenario_details.get('original_message', '')
             })
         
-        # Strategy 4: Default fallback
+        # Strategy 4: Default fallback (use Mediterranean as generic default)
         else:
-            return ('generate_irish_sea_scenario', {
+            return ('generate_maritime_scenario', {
                 'num_ships': scenario_details['num_ships'],
+                'region': 'mediterranean',
                 'duration_hours': scenario_details['duration'],
                 'scenario_name': scenario_details['scenario_name']
             })
@@ -393,7 +394,7 @@ The generated data includes realistic AIS position reports with proper maritime 
         
         responses = [
             "I'm specialized in generating AIS maritime data. You can ask me to generate ships, list available ports, or show ship types. What would you like to create?",
-            "I can help you create realistic ship movement data for the Irish Sea region. Try asking me to 'generate 3 ships' or 'show me available ports'.",
+            "I can help you create realistic ship movement data for any maritime region worldwide. Try asking me to 'generate 3 ships in the Mediterranean' or 'show me available ports'.",
             "As a maritime AIS assistant, I can create ships with realistic routes and movement patterns. What kind of vessel scenario would you like me to generate?",
             "I'm here to help with ship data generation! You can request specific numbers of ships, certain routes, or ask about my capabilities. What interests you?",
             "My expertise is in creating realistic maritime AIS tracking data. I can generate multiple ships with different types and routes. What scenario would you like to explore?"

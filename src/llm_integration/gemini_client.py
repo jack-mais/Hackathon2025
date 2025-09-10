@@ -42,7 +42,7 @@ You support a wide range of ports worldwide including major commercial ports, fe
 When users ask for ship generation, determine what tools to call based on their request:
 
 TOOLS AVAILABLE:
-1. generate_irish_sea_scenario - For general requests (still supports Irish Sea as default region)
+1. generate_maritime_scenario - For general requests (defaults to Mediterranean region)
    Parameters: num_ships, duration_hours, report_interval_minutes, scenario_name
 
 2. generate_custom_ships - For specific ship requests with custom routes anywhere worldwide
@@ -129,7 +129,7 @@ Please respond helpfully about AIS ship generation. If they're asking for inform
                     'duration_hours': scenario_details['duration'],
                     'scenario_name': scenario_details['scenario_name']
                 })
-            elif scenario_details['region'] and scenario_details['region'] != 'irish_sea':
+            elif scenario_details['region']:
                 return ('generate_maritime_scenario', {
                     'num_ships': scenario_details['num_ships'],
                     'region': scenario_details['region'],
@@ -138,8 +138,9 @@ Please respond helpfully about AIS ship generation. If they're asking for inform
                     'location_hint': user_message  # Pass original message for location parsing
                 })
             else:
-                return ('generate_irish_sea_scenario', {
+                return ('generate_maritime_scenario', {
                     'num_ships': scenario_details['num_ships'],
+                    'region': 'mediterranean',
                     'duration_hours': scenario_details['duration'],
                     'scenario_name': scenario_details['scenario_name']
                 })
@@ -156,7 +157,7 @@ Please respond helpfully about AIS ship generation. If they're asking for inform
         scenario = {
             'num_ships': 3,
             'duration': 2.0,
-            'region': 'irish_sea',
+            'region': 'mediterranean',
             'ship_types': [],
             'custom_routes': [],
             'scenario_name': f'gemini_scenario_{random.randint(1000, 9999)}',
@@ -288,7 +289,7 @@ Please respond helpfully about AIS ship generation. If they're asking for inform
             scenario['scenario_name'] = f'route_{start}_to_{end}'
         elif scenario['scenario_type']:
             scenario['scenario_name'] = f"{scenario['scenario_type']}_scenario"
-        elif scenario['region'] != 'irish_sea':
+        elif scenario['region'] != 'mediterranean':
             scenario['scenario_name'] = f"{scenario['region']}_scenario"
         
         return scenario
@@ -303,16 +304,16 @@ Please respond helpfully about AIS ship generation. If they're asking for inform
 🚢 **AIS Ship Data Generator Capabilities (Gemini-Powered)**
 
 **What I can generate:**
-• Multiple ships (1-10) with realistic Irish Sea routes
+• Multiple ships (1-10) with realistic routes in any maritime region worldwide
 • Different ship types: Passenger ferries, Cargo ships, Fishing vessels, Patrol boats, High-speed craft
 • Custom routes between major ports: Dublin, Holyhead, Liverpool, Belfast, Cork, Swansea, etc.
 • Realistic movement patterns: Ferry routes, cargo lanes, fishing circles, patrol patterns
 
 **Example requests:**
-• "Generate 3 ships in the Irish Sea"
+• "Generate 3 ships in the Mediterranean"
 • "Create 2 cargo ships from Dublin to Liverpool and 1 ferry from Dublin to Holyhead"
 • "I need a fishing vessel and 2 ferries for a 4-hour simulation"
-• "Generate AIS NMEA data for ships roaming about the Irish sea"
+• "Generate AIS NMEA data for ships roaming about the Mediterranean"
 
 **Powered by Google Gemini** - Free API with generous limits!
 

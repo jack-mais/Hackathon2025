@@ -148,16 +148,16 @@ Be conversational and helpful, but focus on maritime operations. Ask clarifying 
 🚢 **AIS Ship Data Generator Capabilities**
 
 **What I can generate:**
-• Multiple ships (1-10) with realistic Irish Sea routes
+• Multiple ships (1-10) with realistic routes in any maritime region worldwide
 • Different ship types: Passenger ferries, Cargo ships, Fishing vessels, Patrol boats, High-speed craft
 • Custom routes between major ports: Dublin, Holyhead, Liverpool, Belfast, Cork, Swansea, etc.
 • Realistic movement patterns: Ferry routes, cargo lanes, fishing circles, patrol patterns
 
 **Example requests:**
-• "Generate 3 ships in the Irish Sea"
+• "Generate 3 ships in the Mediterranean"
 • "Create 2 cargo ships from Dublin to Liverpool and 1 ferry from Dublin to Holyhead"  
 • "I need a fishing vessel and 2 ferries for a 4-hour simulation"
-• "Generate AIS NMEA data for ships roaming about the Irish sea"
+• "Generate AIS NMEA data for ships roaming about the Mediterranean"
 
 **Output:**
 • JSON files with detailed AIS position reports

@@ -78,7 +78,7 @@ class WorldwideRoutes:
         return ports
     
     @classmethod
-    def get_ports_by_region(cls, region: str = "irish_sea") -> Dict[str, Position]:
+    def get_ports_by_region(cls, region: str = "mediterranean") -> Dict[str, Position]:
         """Get ports filtered by region"""
         all_ports = cls.get_all_ports()
         
@@ -225,21 +225,21 @@ class WorldwideRoutes:
             if region in location_lower:
                 return coords
         
-        # Ultimate fallback - Irish Sea
-        return Position(latitude=53.5, longitude=-5.0)
+        # Ultimate fallback - Mediterranean (generic maritime area)
+        return Position(latitude=40.0, longitude=15.0)
     
     @classmethod
-    def get_ferry_routes(cls, region: str = "irish_sea") -> List[Tuple[Position, Position, str]]:
+    def get_ferry_routes(cls, region: str = "mediterranean") -> List[Tuple[Position, Position, str]]:
         """Get ferry routes by region"""
         if region.lower() == "irish_sea":
-            return [
-                (cls.DUBLIN, cls.HOLYHEAD, "Dublin-Holyhead Ferry"),
-                (cls.BELFAST, cls.LIVERPOOL, "Belfast-Liverpool Ferry"),
-                (cls.CORK, cls.SWANSEA, "Cork-Swansea Ferry"),
-                (cls.DUBLIN, cls.ISLE_OF_MAN, "Dublin-Isle of Man"),
-                (cls.HOLYHEAD, cls.DUBLIN, "Holyhead-Dublin Ferry"),
-                (cls.LIVERPOOL, cls.BELFAST, "Liverpool-Belfast Ferry"),
-            ]
+        return [
+            (cls.DUBLIN, cls.HOLYHEAD, "Dublin-Holyhead Ferry"),
+            (cls.BELFAST, cls.LIVERPOOL, "Belfast-Liverpool Ferry"),
+            (cls.CORK, cls.SWANSEA, "Cork-Swansea Ferry"),
+            (cls.DUBLIN, cls.ISLE_OF_MAN, "Dublin-Isle of Man"),
+            (cls.HOLYHEAD, cls.DUBLIN, "Holyhead-Dublin Ferry"),
+            (cls.LIVERPOOL, cls.BELFAST, "Liverpool-Belfast Ferry"),
+        ]
         elif region.lower() == "mediterranean":
             return [
                 (cls.BARCELONA, cls.MARSEILLE, "Barcelona-Marseille Ferry"),
@@ -254,19 +254,19 @@ class WorldwideRoutes:
                 (cls.HELSINKI, cls.STOCKHOLM, "Helsinki-Stockholm Ferry"),
             ]
         else:
-            # Default to Irish Sea
-            return cls.get_ferry_routes("irish_sea")
+            # Default to Mediterranean
+            return cls.get_ferry_routes("mediterranean")
     
     @classmethod 
-    def get_cargo_routes(cls, region: str = "irish_sea") -> List[Tuple[Position, Position, str]]:
+    def get_cargo_routes(cls, region: str = "mediterranean") -> List[Tuple[Position, Position, str]]:
         """Get cargo ship routes by region"""
         if region.lower() == "irish_sea":
-            return [
-                (cls.DUBLIN, cls.LIVERPOOL, "Dublin-Liverpool Cargo"),
-                (cls.CORK, cls.CARDIFF, "Cork-Cardiff Cargo"),
-                (cls.BELFAST, cls.SWANSEA, "Belfast-Swansea Container"),
-                (cls.LIVERPOOL, cls.DUBLIN, "Liverpool-Dublin Supply"),
-            ]
+        return [
+            (cls.DUBLIN, cls.LIVERPOOL, "Dublin-Liverpool Cargo"),
+            (cls.CORK, cls.CARDIFF, "Cork-Cardiff Cargo"),
+            (cls.BELFAST, cls.SWANSEA, "Belfast-Swansea Container"),
+            (cls.LIVERPOOL, cls.DUBLIN, "Liverpool-Dublin Supply"),
+        ]
         elif region.lower() == "europe":
             return [
                 (cls.ROTTERDAM, cls.HAMBURG, "Rotterdam-Hamburg Container"),
@@ -288,17 +288,17 @@ class WorldwideRoutes:
                 (cls.VANCOUVER, cls.LOS_ANGELES, "West Coast Supply"),
             ]
         else:
-            return cls.get_cargo_routes("irish_sea")
+            return cls.get_cargo_routes("mediterranean")
     
     @classmethod
-    def get_fishing_areas(cls, region: str = "irish_sea") -> List[Tuple[Position, Position, str]]:
+    def get_fishing_areas(cls, region: str = "mediterranean") -> List[Tuple[Position, Position, str]]:
         """Get fishing areas (circular/patrol patterns) by region"""
         if region.lower() == "irish_sea":
-            return [
-                (Position(53.7, -5.5), Position(53.9, -5.3), "North Irish Sea Grounds"),
-                (Position(52.5, -5.8), Position(52.7, -5.6), "Central Irish Sea Grounds"), 
-                (Position(51.8, -4.5), Position(52.0, -4.3), "Bristol Channel Grounds"),
-            ]
+        return [
+            (Position(53.7, -5.5), Position(53.9, -5.3), "North Irish Sea Grounds"),
+            (Position(52.5, -5.8), Position(52.7, -5.6), "Central Irish Sea Grounds"), 
+            (Position(51.8, -4.5), Position(52.0, -4.3), "Bristol Channel Grounds"),
+        ]
         elif region.lower() == "north_sea":
             return [
                 (Position(56.0, 3.0), Position(56.2, 3.2), "Dogger Bank Grounds"),
@@ -313,14 +313,14 @@ class WorldwideRoutes:
             return cls.get_fishing_areas("irish_sea")
     
     @classmethod
-    def get_coastal_patrol_routes(cls, region: str = "irish_sea") -> List[Tuple[Position, Position, str]]:
+    def get_coastal_patrol_routes(cls, region: str = "mediterranean") -> List[Tuple[Position, Position, str]]:
         """Get coastal patrol routes by region"""
         if region.lower() == "irish_sea":
-            return [
-                (Position(53.4, -6.0), Position(53.6, -5.8), "Dublin Bay Patrol"),
-                (Position(53.3, -4.4), Position(53.4, -4.2), "Anglesey Coast Patrol"),
-                (Position(54.6, -5.8), Position(54.8, -5.6), "Belfast Lough Patrol"),
-            ]
+        return [
+            (Position(53.4, -6.0), Position(53.6, -5.8), "Dublin Bay Patrol"),
+            (Position(53.3, -4.4), Position(53.4, -4.2), "Anglesey Coast Patrol"),
+            (Position(54.6, -5.8), Position(54.8, -5.6), "Belfast Lough Patrol"),
+        ]
         elif region.lower() == "mediterranean":
             return [
                 (Position(41.9, 2.5), Position(42.1, 2.7), "Barcelona Coast Patrol"),
@@ -332,7 +332,7 @@ class WorldwideRoutes:
                 (Position(53.4, 9.8), Position(53.6, 10.0), "Hamburg Port Patrol"),
             ]
         else:
-            return cls.get_coastal_patrol_routes("irish_sea")
+            return cls.get_coastal_patrol_routes("mediterranean")
 
 
 # Backward compatibility alias
@@ -619,7 +619,7 @@ class MultiShipGenerator:
         """Generate multiple ships in Irish Sea with realistic routes"""
         return self.generate_maritime_scenario(num_ships, region="irish_sea")
     
-    def generate_maritime_scenario(self, num_ships: int = 3, region: str = "irish_sea", location_hint: str = None) -> List[RealisticShipMovement]:
+    def generate_maritime_scenario(self, num_ships: int = 3, region: str = "mediterranean", location_hint: str = None) -> List[RealisticShipMovement]:
         """Generate multiple ships in any maritime region with realistic routes"""
         
         ships = []
@@ -659,7 +659,7 @@ class MultiShipGenerator:
         combo_index = ship_index % len(type_combinations)
         return type_combinations[combo_index]
     
-    def _get_route_for_type(self, route_type: RouteType, routes_used: set, region: str = "irish_sea", location_hint: str = None) -> Tuple[Route, str]:
+    def _get_route_for_type(self, route_type: RouteType, routes_used: set, region: str = "mediterranean", location_hint: str = None) -> Tuple[Route, str]:
         """Get a route based on the route type, region, and location hint"""
         
         # First try to get predefined routes for the region
@@ -683,16 +683,16 @@ class MultiShipGenerator:
         # If no predefined routes or all used, generate intelligent routes using location hint
         if location_hint:
             return self._generate_intelligent_route(route_type, region, location_hint, len(routes_used))
-        elif region != "irish_sea":
+        else:
             # Generate route using region coordinates
             return self._generate_regional_route(route_type, region, len(routes_used))
         
         # Fallback: pick random from available routes
         if routes:
-            start_pos, end_pos, name = random.choice(routes)
-            route = Route(start_pos, end_pos, 12.0)
-            return route, f"{name}_{len(routes_used)}"
-        
+        start_pos, end_pos, name = random.choice(routes)
+        route = Route(start_pos, end_pos, 12.0)
+        return route, f"{name}_{len(routes_used)}"
+    
         # Ultimate fallback: generate basic route
         return self._generate_basic_route(route_type, len(routes_used))
     
@@ -772,16 +772,16 @@ class MultiShipGenerator:
     def _generate_basic_route(self, route_type: RouteType, route_index: int) -> Tuple[Route, str]:
         """Generate a basic fallback route"""
         
-        # Irish Sea default positions
-        start_pos = Position(latitude=53.3, longitude=-6.0)  # Near Dublin
-        end_pos = Position(latitude=53.4, longitude=-4.5)    # Near Holyhead
+        # Mediterranean default positions (more generic)
+        start_pos = Position(latitude=40.5, longitude=14.0)  # Near Naples
+        end_pos = Position(latitude=41.0, longitude=2.0)     # Near Barcelona
         
         route = Route(start_pos, end_pos, 12.0)
         route_name = f"Default_{route_type.value}_{route_index}"
         
         return route, route_name
     
-    def _generate_ship_name(self, ship_type: ShipType, index: int, region: str = "irish_sea") -> str:
+    def _generate_ship_name(self, ship_type: ShipType, index: int, region: str = "mediterranean") -> str:
         """Generate realistic ship name based on type and region"""
         
         # Region-specific name variations
@@ -825,8 +825,8 @@ class MultiShipGenerator:
             ShipType.HIGH_SPEED_CRAFT: "fast",
         }
         
-        # Get names for region and type, fallback to irish_sea if region not found
-        region_names = name_prefixes.get(region.lower(), name_prefixes["irish_sea"])
+        # Get names for region and type, fallback to mediterranean if region not found
+        region_names = name_prefixes.get(region.lower(), name_prefixes["mediterranean"])
         category = type_to_category.get(ship_type, "cargo")
         names = region_names.get(category, region_names["cargo"])
         

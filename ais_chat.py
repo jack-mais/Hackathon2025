@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-AIS Chat CLI - Unified LLM Interface
+AIS Chat CLI - Google Gemini AI Interface
 Talk to AI about generating AIS ship data via natural language
-Supports Gemini (recommended), OpenAI, and Demo mode
+Powered by Google Gemini AI
 """
 
 import os
@@ -31,21 +31,21 @@ class AISChatCLI:
     def print_banner(self):
         """Print welcome banner"""
         banner_text = """
-# 🚢 AIS Ship Data Generator - AI Powered
+# 🚢 AIS Ship Data Generator - Gemini AI Powered
 
-**Chat with AI to generate realistic maritime AIS data!**
+**Chat with Google Gemini AI to generate realistic maritime AIS data!**
 
-🤖 **Supported AI Models:**
-• **Gemini** (Recommended) - Free tier, fast responses
-• **OpenAI GPT** - Requires API key
-• **Demo Mode** - Works without any API keys
+🌟 **Powered by Google Gemini** - Advanced AI for natural language understanding
 
 Type your requests in natural language like:
-• "Generate 3 ships in the Irish Sea"
-• "Create 2 cargo ships and 1 ferry for a 4-hour simulation"  
-• "I need AIS data for ships between Dublin and Holyhead"
+• "Generate a convoy off the coast of Sicily"
+• "Create 3 ships in the Mediterranean for 6 hours"
+• "I need cargo ships from Barcelona to Naples"
+• "Generate fishing vessels in Norwegian waters"
 
 Type 'help' for more examples, 'quit' to exit.
+
+🔑 **Setup:** Set your GEMINI_KEY environment variable to get started!
         """
         
         self.console.print(Panel(
@@ -54,106 +54,69 @@ Type 'help' for more examples, 'quit' to exit.
             border_style="green"
         ))
     
-    def detect_available_llms(self) -> list:
-        """Detect which LLM clients are available based on API keys"""
-        available = []
-        
-        # Check for Gemini
-        if os.getenv("GEMINI_KEY"):
-            available.append(("gemini", "Google Gemini (Recommended) ✅"))
-        
-        # Check for OpenAI
-        if os.getenv("OPENAI_API_KEY"):
-            available.append(("openai", "OpenAI GPT ✅"))
-        
-        # Demo mode is always available
-        available.append(("demo", "Demo Mode (No API key required) 🎯"))
-        
-        return available
+    def detect_gemini_key(self) -> bool:
+        """Check if Gemini API key is available"""
+        return bool(os.getenv("GEMINI_KEY"))
     
-    def choose_llm(self) -> str:
-        """Let user choose which LLM to use"""
-        available = self.detect_available_llms()
-        
-        if len(available) == 1 and available[0][0] == "demo":
-            self.console.print("🎯 No API keys detected. Using Demo Mode.")
-            return "demo"
-        
-        self.console.print("\n🤖 **Available AI Models:**")
-        for i, (llm_id, description) in enumerate(available, 1):
-            self.console.print(f"  {i}. {description}")
-        
-        while True:
-            try:
-                choice = int(Prompt.ask(f"\n🔍 Choose your AI model (1-{len(available)})", default="1"))
-                if 1 <= choice <= len(available):
-                    return available[choice - 1][0]
-                else:
-                    self.console.print("❌ Invalid choice. Please try again.", style="red")
-            except (ValueError, KeyboardInterrupt):
-                self.console.print("❌ Invalid input. Please enter a number.", style="red")
+    def check_setup(self) -> bool:
+        """Check if Gemini is properly configured"""
+        if not self.detect_gemini_key():
+            self.console.print("\n❌ **GEMINI_KEY not found!**", style="red")
+            self.console.print("")
+            self.console.print("🔧 **Setup Instructions:**", style="yellow")
+            self.console.print("1. Get a free API key from https://aistudio.google.com/app/apikey")
+            self.console.print("2. Set environment variable: export GEMINI_KEY='your-api-key-here'")
+            self.console.print("3. Or add to .env file: GEMINI_KEY=your-api-key-here")
+            self.console.print("")
+            return False
+        return True
     
-    async def initialize_llm(self, llm_type: str = None):
-        """Initialize the chosen LLM client"""
-        if not llm_type:
-            llm_type = self.choose_llm()
-        
-        self.llm_type = llm_type
+    async def initialize_gemini(self):
+        """Initialize the Gemini AI client"""
+        self.llm_type = "gemini"
         
         try:
-            if llm_type == "gemini":
-                from src.llm_integration.gemini_client import AISGeminiClient
-                self.console.print("🌟 Initializing Gemini AI assistant...", style="yellow")
-                self.llm_client = AISGeminiClient()
-                self.console.print("✅ Gemini AI assistant ready! 🌟", style="green")
-                
-            elif llm_type == "openai":
-                from src.llm_integration.llm_client import AISLLMClient
-                self.console.print("🤖 Initializing OpenAI GPT assistant...", style="yellow")
-                self.llm_client = AISLLMClient()
-                self.console.print("✅ OpenAI GPT assistant ready! 🤖", style="green")
-                
-            elif llm_type == "demo":
-                from src.llm_integration.demo_client import AISDemo
-                self.console.print("🎯 Initializing Demo mode assistant...", style="yellow")
-                self.llm_client = AISDemo()
-                self.console.print("✅ Demo assistant ready! 🎯", style="green")
-                
+            from src.llm_integration.gemini_client import AISGeminiClient
+            self.console.print("🌟 Initializing Google Gemini AI assistant...", style="yellow")
+            self.llm_client = AISGeminiClient()
+            self.console.print("✅ Google Gemini AI assistant ready! 🌟", style="green")
             return True
             
         except Exception as e:
-            self.console.print(f"❌ Failed to initialize {llm_type}: {e}", style="red")
+            self.console.print(f"❌ Failed to initialize Gemini: {e}", style="red")
+            self.console.print("💡 Make sure your GEMINI_KEY is valid and you have internet connection", style="yellow")
             return False
     
     def show_help(self):
         """Show help information"""
-        help_text = f"""
-# 🚢 AIS Generator Commands & Examples - {self.llm_type.title()} Mode
+        help_text = """
+# 🚢 AIS Generator Commands & Examples - Google Gemini AI
 
 ## **Example Natural Language Requests:**
 
-**Basic Generation:**
-• "Generate 3 ships in the Irish Sea"
-• "Create 5 ships with different types"
-• "I want some AIS data for testing"
+**Regional Generation:**
+• "Generate a convoy off the coast of Sicily"
+• "Create 4 ships in the Mediterranean for 6 hours"
+• "I need vessels in Norwegian waters"
+• "Generate ships near the Greek islands"
 
 **Specific Ship Types:**
 • "Generate 2 cargo ships and 1 ferry"
 • "Create a fishing vessel and 2 passenger ferries"
 • "I need 1 high-speed craft and 3 cargo ships"
 
-**Custom Routes:**
-• "Generate ships from Dublin to Holyhead"
-• "Create 2 ferries between Dublin and Liverpool"
-• "I want cargo ships from Cork to Cardiff"
+**Custom Routes & Locations:**
+• "Generate ships from Barcelona to Naples"
+• "Create ships between Singapore and Shanghai"
+• "I want vessels from Rotterdam to Hamburg"
 
-**Simulation Parameters:**
-• "Generate 4 ships for a 6-hour simulation"
-• "Create ships with realistic movement patterns"
-• "I need a 3-hour scenario with mixed ship types"
+**Complex Scenarios:**
+• "Generate a rescue scenario with 5 ships"
+• "Create a convoy escort mission off Sicily"
+• "I need a fishing fleet in the North Sea"
 
 **Information Queries:**
-• "What ports are available?"
+• "What ports are available in Asia?"
 • "What ship types can you generate?"
 • "Show me your capabilities"
 
@@ -166,15 +129,16 @@ Type 'help' for more examples, 'quit' to exit.
 
 ## **Generated Output:**
 • JSON files saved to `./output/` directory
-• Use `python map_multi_viewer.py` to visualize on map
+• Interactive HTML maps automatically generated
+• NMEA format data for marine systems
 • Individual ship files for detailed analysis
 
-**Current AI Model:** {self.llm_type.title()}
+**Powered by:** Google Gemini AI - Advanced natural language understanding
         """
         
         self.console.print(Panel(
             Markdown(help_text),
-            title="Help & Examples",
+            title="🌟 Gemini AI Help & Examples",
             border_style="cyan"
         ))
     
@@ -192,7 +156,7 @@ Type 'help' for more examples, 'quit' to exit.
             
             self.console.print(Panel(
                 Markdown(capabilities),
-                title=f"{self.llm_type.title()} AI Capabilities",
+                title="🌟 Gemini AI Capabilities",
                 border_style="green"
             ))
         except Exception as e:
@@ -257,7 +221,7 @@ Type 'help' for more examples, 'quit' to exit.
             return True
         
         try:
-            self.console.print(f"🤖 {self.llm_type.title()} is thinking...", style="yellow")
+            self.console.print(f"🌟 Google Gemini is thinking...", style="yellow")
             
             if hasattr(self.llm_client, 'process_request'):
                 response = await self.llm_client.process_request(user_input)
@@ -267,7 +231,7 @@ Type 'help' for more examples, 'quit' to exit.
             # Display response in a panel
             self.console.print(Panel(
                 Markdown(response),
-                title=f"🤖 {self.llm_type.title()} AI Assistant",
+                title="🌟 Gemini AI Assistant",
                 border_style="green"
             ))
             
@@ -278,7 +242,7 @@ Type 'help' for more examples, 'quit' to exit.
     
     async def run_chat_loop(self):
         """Main chat loop"""
-        self.console.print(f"\n🗣️  **Start chatting with {self.llm_type.title()}!** Type your request or 'help' for examples.\n")
+        self.console.print(f"\n🗣️  **Start chatting with Google Gemini!** Type your request or 'help' for examples.\n")
         
         while True:
             try:
@@ -306,22 +270,26 @@ Type 'help' for more examples, 'quit' to exit.
         """Main entry point"""
         self.print_banner()
         
-        # Initialize LLM
-        if not await self.initialize_llm():
+        # Check if Gemini is properly set up
+        if not self.check_setup():
+            return
+        
+        # Initialize Gemini
+        if not await self.initialize_gemini():
             return
         
         # Show quick intro
         self.console.print(Panel(
-            f"💡 **Quick Start:** Try saying 'Generate 3 ships' or 'What can you do?' using {self.llm_type.title()}",
+            "💡 **Quick Start:** Try saying 'Generate a convoy off Sicily' or 'What can you do?'",
             border_style="blue"
         ))
         
         # Run chat loop
         await self.run_chat_loop()
         
-        self.console.print(f"\n🌊 Thank you for using the AIS Generator with {self.llm_type.title()}!", style="green")
+        self.console.print(f"\n🌊 Thank you for using the AIS Generator with Google Gemini!", style="green")
         self.console.print("📁 Check the ./output/ directory for generated files")
-        self.console.print("🗺️  Use 'python map_multi_viewer.py' to visualize your ships")
+        self.console.print("🗺️  Interactive maps are automatically generated for each scenario!")
 
 
 async def main():
