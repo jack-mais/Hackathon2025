@@ -112,7 +112,7 @@ async def create_irish_sea_demo():
         "ship_details": {
             "mmsi": mmsi,
             "name": ship_name,
-            "route": "Dublin to Liverpool",
+            "route": "Dublin to Holyhead",
             "distance_nm": ship.total_distance_nm,
             "estimated_time_hours": ship.total_time_hours,
             "bearing": ship.bearing
@@ -348,7 +348,7 @@ async def generate_irish_sea_demo(request: Optional[GenerateRequest] = None):
             "ship_info": {
                 "mmsi": mmsi,
                 "name": "IRISH_SEA_DEMO",
-                "route": "Dublin to Liverpool"
+                "route": "Dublin to Holyhead"
             },
             "data_summary": {
                 "total_reports": len(ship_states),

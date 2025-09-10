@@ -99,8 +99,8 @@ curl -X POST "http://localhost:8000/ships/add" \\
   -d '{
     "start_lat": 53.3498,
     "start_lon": -6.2603,
-    "end_lat": 53.4084,
-    "end_lon": -2.9916,
+    "end_lat": 53.3090,
+    "end_lon": -4.6324,
     "speed_knots": 12.0,
     "ship_name": "HACKATHON_VESSEL",
     "mmsi": 123456789
@@ -135,7 +135,7 @@ Generated files are saved to `./output/` directory:
   },
   "route_summary": {
     "start_position": {"latitude": 53.3498, "longitude": -6.2603},
-    "end_position": {"latitude": 53.4084, "longitude": -2.9916}
+    "end_position": {"latitude": 53.3090, "longitude": -4.6324}
   },
   "ais_data": [
     {

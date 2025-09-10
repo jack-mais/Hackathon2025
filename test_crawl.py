@@ -25,10 +25,10 @@ def test_irish_sea_route():
     formatter = NMEAFormatter()
     file_manager = FileOutputManager()
     
-    # Create Irish Sea route (Dublin to Liverpool)
+    # Create Irish Sea route (Dublin to Holyhead)
     route = generator.generate_sample_irish_sea_route()
     print(f"📍 Route: Dublin ({route.start_position.latitude:.4f}, {route.start_position.longitude:.4f})")
-    print(f"📍    to: Liverpool ({route.end_position.latitude:.4f}, {route.end_position.longitude:.4f})")
+    print(f"📍    to: Holyhead ({route.end_position.latitude:.4f}, {route.end_position.longitude:.4f})")
     print(f"🚤 Speed: {route.speed_knots} knots")
     
     # Add ship
@@ -42,9 +42,9 @@ def test_irish_sea_route():
     print(f"🧭 Bearing: {ship.bearing:.1f}°")
     print()
     
-    # Generate sample data (10 minutes worth, every 30 seconds)
-    duration_hours = 10 / 60  # 10 minutes
-    report_interval = 30  # 30 seconds
+    # Generate sample data for complete journey
+    duration_hours = ship.total_time_hours + 0.1  # Full journey time plus a bit extra
+    report_interval = 300  # 5 minutes (to keep reasonable number of points)
     
     print("📡 Generating AIS data...")
     states = list(ship.generate_movement(duration_hours, report_interval))

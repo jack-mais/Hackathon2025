@@ -156,12 +156,12 @@ class AISGenerator:
     
     def generate_sample_irish_sea_route(self) -> Route:
         """Generate a sample route in the Irish Sea"""
-        # Dublin to Liverpool
+        # Dublin to Holyhead (main ferry route)
         dublin_port = Position(latitude=53.3498, longitude=-6.2603)
-        liverpool_port = Position(latitude=53.4084, longitude=-2.9916)
+        holyhead_port = Position(latitude=53.3090, longitude=-4.6324)
         
         return Route(
             start_position=dublin_port,
-            end_position=liverpool_port,
+            end_position=holyhead_port,
             speed_knots=12.0
         )
