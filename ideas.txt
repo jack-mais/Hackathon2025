@@ -1,0 +1,37 @@
+Nmea test data generator for testing 
+scenarios that can't be found in natural datasets.
+eg. Port to port data generator, ship doing circles in the ocean.
+Should take size characteristic into account
+
+
+Flink training ground. Locally deployable flink env with kafka and a db.
+Build in docket compose for 1 step deployment. Needs to have lots of interactive
+displayables
+Potentially get to port events stage one
+
+
+
+LLM chat to ask questions about maritime traffic. 
+eg. prompt "How many oil tankers arriving in venesula" 
+
+
+Smart bouy POC 
+
+
+Tourist tracker for monitoring the ingress of tourist to particular 
+ports to identiy how busy their respective town will be come. Identify
+foot fall.
+
+
+automatic supplier emailer - checks during outage for lack of errors
+in services and if so then sends an auto-generated email to supplier
+and skips alerting on-call
+
+
+Automatic code quality checks (Sonar cube) so prs are better standardized 
+across team members
+
+
+Use a standard/basic news aggregator to look for maritime news and pull
+out stats/graphics about the area (e.g. evergiven, titanic)
+

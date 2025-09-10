@@ -1,0 +1,10 @@
+Search pre made solution on github
+https://github.com/luk-kop/nmea-ais-generator
+
+Potentially hack our own together
+Crawl. 1 ship Point to Point. 
+Walk. Multiple ships proper track
+Run.  LLM to generator via MCP
+
+End count. LLM takes language based prompt to generate the scenario. 
+
