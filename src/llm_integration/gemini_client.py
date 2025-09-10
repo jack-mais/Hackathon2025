@@ -107,74 +107,191 @@ Please respond helpfully about AIS ship generation. If they're asking for inform
             return error_message
     
     def _determine_tool_call(self, user_message: str) -> Optional[tuple]:
-        """Simple pattern matching to determine what tool to call"""
+        """Advanced pattern matching for sophisticated scenario generation"""
         
-        # Pattern matching for different requests
-        if any(word in user_message for word in ['ports', 'available ports', 'what ports']):
+        user_lower = user_message.lower().strip()
+        
+        # Handle information queries first
+        if any(word in user_lower for word in ['ports', 'available ports', 'what ports', 'list ports']):
             return ('list_available_ports', {})
         
-        elif any(word in user_message for word in ['ship types', 'types', 'what ships', 'available ships']):
+        elif any(word in user_lower for word in ['ship types', 'types', 'what ships', 'available ships', 'kinds of ships']):
             return ('get_ship_types', {})
         
-        elif any(word in user_message for word in ['generate', 'create', 'make']) and any(word in user_message for word in ['ship', 'ships']):
-            # Extract number of ships
-            import re
-            numbers = re.findall(r'\d+', user_message)
-            num_ships = int(numbers[0]) if numbers else 3
+        elif any(word in user_lower for word in ['generate', 'create', 'make', 'simulate', 'show me']) and any(word in user_lower for word in ['ship', 'ships', 'vessel', 'boat', 'fleet']):
+            # Use advanced scenario parsing
+            scenario_details = self._parse_sophisticated_scenario(user_message)
             
-            # Check for specific routes - worldwide ports
-            ports = ['dublin', 'holyhead', 'liverpool', 'belfast', 'cork', 'swansea', 'cardiff', 
-                    'rotterdam', 'hamburg', 'singapore', 'shanghai', 'hong kong', 'los angeles', 
-                    'new york', 'miami', 'barcelona', 'marseille', 'naples', 'venice', 'athens',
-                    'istanbul', 'copenhagen', 'stockholm', 'oslo', 'helsinki', 'gdansk', 'riga',
-                    'tallinn', 'st petersburg', 'murmansk', 'vladivostok', 'tokyo', 'yokohama',
-                    'busan', 'incheon', 'mumbai', 'chennai', 'karachi', 'dubai', 'doha', 'kuwait']
-            mentioned_ports = [port for port in ports if port in user_message]
-            
-            # Check for specific ship types
-            ship_types = ['cargo', 'ferry', 'fishing', 'patrol', 'passenger', 'high-speed']
-            mentioned_types = [ship_type for ship_type in ship_types if ship_type in user_message]
-            
-            # Extract duration if mentioned
-            duration = 2.0  # default
-            if 'hour' in user_message:
-                hour_matches = re.findall(r'(\d+)\s*hour', user_message)
-                if hour_matches:
-                    duration = float(hour_matches[0])
-            
-            if len(mentioned_ports) >= 2 or mentioned_types:
-                # Custom ships request
-                ships = []
-                if 'cargo' in user_message and len(mentioned_ports) >= 2:
-                    ships.append({
-                        'ship_type': 'CARGO',
-                        'ship_name': 'CUSTOM_CARGO',
-                        'start_port': mentioned_ports[0].upper(),
-                        'end_port': mentioned_ports[1].upper()
-                    })
-                elif 'ferry' in user_message or 'passenger' in user_message:
-                    ships.append({
-                        'ship_type': 'PASSENGER',
-                        'ship_name': 'CUSTOM_FERRY', 
-                        'start_port': mentioned_ports[0].upper() if mentioned_ports else 'DUBLIN',
-                        'end_port': mentioned_ports[1].upper() if len(mentioned_ports) > 1 else 'HOLYHEAD'
-                    })
-                
-                if ships:
-                    return ('generate_custom_ships', {
-                        'ships': ships,
-                        'duration_hours': duration,
-                        'scenario_name': 'custom_gemini_scenario'
-                    })
-            
-            # General scenario request
-            return ('generate_irish_sea_scenario', {
-                'num_ships': min(num_ships, 10),
-                'duration_hours': duration,
-                'scenario_name': f'gemini_scenario_{num_ships}_ships'
-            })
+            # Determine best tool based on parsed details
+            if scenario_details['custom_routes']:
+                return ('generate_custom_ships', {
+                    'ships': scenario_details['custom_routes'],
+                    'duration_hours': scenario_details['duration'],
+                    'scenario_name': scenario_details['scenario_name']
+                })
+            elif scenario_details['region'] and scenario_details['region'] != 'irish_sea':
+                return ('generate_maritime_scenario', {
+                    'num_ships': scenario_details['num_ships'],
+                    'region': scenario_details['region'],
+                    'duration_hours': scenario_details['duration'],
+                    'scenario_name': scenario_details['scenario_name'],
+                    'location_hint': user_message  # Pass original message for location parsing
+                })
+            else:
+                return ('generate_irish_sea_scenario', {
+                    'num_ships': scenario_details['num_ships'],
+                    'duration_hours': scenario_details['duration'],
+                    'scenario_name': scenario_details['scenario_name']
+                })
         
         return None
+    
+    def _parse_sophisticated_scenario(self, user_message: str) -> Dict[str, Any]:
+        """Parse complex maritime scenarios from natural language"""
+        import re
+        import random
+        
+        user_lower = user_message.lower().strip()
+        
+        scenario = {
+            'num_ships': 3,
+            'duration': 2.0,
+            'region': 'irish_sea',
+            'ship_types': [],
+            'custom_routes': [],
+            'scenario_name': f'gemini_scenario_{random.randint(1000, 9999)}',
+            'scenario_type': None
+        }
+        
+        # Advanced ship count extraction
+        ship_patterns = [
+            r'(\d+)\s*ships?', r'(\d+)\s*vessels?', r'(\d+)\s*boats?',
+            r'fleet\s+of\s+(\d+)', r'(\d+)[-\s]*ship', r'(\d+)\s*craft',
+            r'group\s+of\s+(\d+)', r'(\d+)\s*units?', r'(\d+)\s*maritime'
+        ]
+        
+        for pattern in ship_patterns:
+            matches = re.findall(pattern, user_lower)
+            if matches:
+                scenario['num_ships'] = min(int(matches[0]), 25)  # Generous cap
+                break
+        
+        # Comprehensive duration extraction
+        if re.search(r'(\d+(?:\.\d+)?)\s*minutes?', user_lower):
+            minutes = re.findall(r'(\d+(?:\.\d+)?)\s*minutes?', user_lower)
+            scenario['duration'] = float(minutes[0]) / 60
+        elif re.search(r'(\d+(?:\.\d+)?)\s*hours?', user_lower):
+            hours = re.findall(r'(\d+(?:\.\d+)?)\s*hours?', user_lower)
+            scenario['duration'] = float(hours[0])
+        elif re.search(r'(\d+(?:\.\d+)?)\s*days?', user_lower):
+            days = re.findall(r'(\d+(?:\.\d+)?)\s*days?', user_lower)
+            scenario['duration'] = float(days[0]) * 24
+        
+        # Sophisticated region detection with specific geographical references
+        region_mapping = {
+            'mediterranean': ['mediterranean', 'med', 'italy', 'spain', 'greece', 'turkish', 'malta',
+                            'sicily', 'coast of sicily', 'off sicily', 'italian coast', 'spanish coast',
+                            'french riviera', 'greek islands', 'turkish coast', 'corsica', 'sardinia',
+                            'balearic', 'crete', 'rhodes', 'gibraltar', 'tyrrhenian'],
+            'north_sea': ['north sea', 'norwegian', 'danish', 'dutch', 'uk waters', 'dogger bank',
+                         'norwegian waters', 'danish waters', 'dutch coast', 'german bight', 'shetland'],
+            'baltic_sea': ['baltic', 'swedish', 'finnish', 'polish', 'estonian', 'latvian',
+                          'stockholm archipelago', 'finnish waters', 'gulf of bothnia'],
+            'caribbean': ['caribbean', 'west indies', 'bahamas', 'jamaica', 'cuba', 'tropical',
+                         'lesser antilles', 'greater antilles', 'barbados', 'puerto rico'],
+            'pacific': ['pacific', 'transpacific', 'japan', 'china', 'korean', 'hawaii', 'california',
+                       'japan waters', 'philippines', 'pacific coast', 'california coast'],
+            'atlantic': ['atlantic', 'transatlantic', 'oceanic', 'north atlantic', 'south atlantic',
+                        'azores', 'canary islands', 'bay of biscay', 'newfoundland'],
+            'indian_ocean': ['indian ocean', 'indian', 'sri lanka', 'maldives', 'madagascar'],
+            'english_channel': ['english channel', 'channel', 'dover strait', 'la manche', 'dover'],
+            'persian_gulf': ['persian gulf', 'arabian gulf', 'gulf states', 'middle east waters'],
+            'red_sea': ['red sea', 'suez canal', 'egyptian', 'saudi waters'],
+            'arctic': ['arctic', 'polar', 'greenland', 'alaskan', 'northwest passage'],
+            'black_sea': ['black sea', 'romanian', 'bulgarian', 'ukrainian'],
+            'asia': ['asian', 'southeast asia', 'far east', 'oriental'],
+            'europe': ['european', 'continental', 'scandinavian']
+        }
+        
+        for region, keywords in region_mapping.items():
+            if any(keyword in user_lower for keyword in keywords):
+                scenario['region'] = region
+                break
+        
+        # Advanced scenario type detection
+        scenario_types = {
+            'convoy_escort': ['convoy', 'escort', 'formation', 'group sailing', 'protected transit'],
+            'cruise_liner': ['cruise', 'luxury', 'tourist', 'vacation', 'leisure sailing'],
+            'emergency_response': ['emergency', 'rescue', 'distress', 'mayday', 'search and rescue', 'sar'],
+            'military_ops': ['military', 'naval', 'defense', 'patrol', 'exercise', 'maneuvers'],
+            'commercial_shipping': ['cargo', 'container', 'bulk', 'freight', 'trade route', 'shipping'],
+            'fishing_operation': ['fishing', 'trawling', 'commercial fishing', 'fleet fishing'],
+            'port_traffic': ['port', 'harbor', 'terminal', 'docking', 'berthing', 'approach'],
+            'weather_routing': ['storm', 'weather', 'hurricane', 'rough seas', 'avoiding weather'],
+            'offshore_support': ['oil rig', 'offshore', 'platform', 'supply vessel', 'drilling'],
+            'racing_regatta': ['race', 'sailing race', 'regatta', 'yacht race', 'competition']
+        }
+        
+        for scenario_type, keywords in scenario_types.items():
+            if any(keyword in user_lower for keyword in keywords):
+                scenario['scenario_type'] = scenario_type
+                break
+        
+        # Enhanced ship type recognition
+        ship_type_mapping = {
+            'CARGO': ['cargo', 'container', 'freight', 'bulk carrier', 'tanker', 'oil tanker', 'lng'],
+            'PASSENGER': ['passenger', 'ferry', 'cruise', 'liner', 'tourist vessel'],
+            'FISHING': ['fishing', 'trawler', 'seiner', 'longline', 'crab vessel', 'shrimp boat'],
+            'PILOT_VESSEL': ['pilot', 'patrol', 'coast guard', 'border patrol', 'police vessel'],
+            'HIGH_SPEED_CRAFT': ['fast', 'speed', 'racing', 'hydrofoil', 'catamaran', 'racing yacht'],
+            'SEARCH_RESCUE': ['rescue', 'lifeboat', 'sar vessel', 'emergency boat'],
+            'LAW_ENFORCEMENT': ['naval', 'warship', 'destroyer', 'frigate', 'military vessel'],
+            'TUG': ['tugboat', 'tug', 'harbor assist', 'towing vessel'],
+            'SAILING': ['sailing', 'yacht', 'sailboat', 'wind-powered']
+        }
+        
+        for ship_type, keywords in ship_type_mapping.items():
+            if any(keyword in user_lower for keyword in keywords):
+                scenario['ship_types'].append(ship_type)
+        
+        # Parse specific port-to-port routes
+        port_database = {
+            'singapore': 'SINGAPORE', 'shanghai': 'SHANGHAI', 'hong kong': 'HONG_KONG',
+            'rotterdam': 'ROTTERDAM', 'hamburg': 'HAMBURG', 'antwerp': 'ANTWERP',
+            'dubai': 'DUBAI', 'mumbai': 'MUMBAI', 'tokyo': 'TOKYO',
+            'new york': 'NEW_YORK', 'los angeles': 'LOS_ANGELES', 'miami': 'MIAMI',
+            'dublin': 'DUBLIN', 'liverpool': 'LIVERPOOL', 'holyhead': 'HOLYHEAD',
+            'barcelona': 'BARCELONA', 'marseille': 'MARSEILLE', 'venice': 'VENICE',
+            'oslo': 'OSLO', 'copenhagen': 'COPENHAGEN', 'stockholm': 'STOCKHOLM',
+            'naples': 'NAPLES', 'athens': 'ATHENS', 'istanbul': 'ISTANBUL'
+        }
+        
+        identified_ports = []
+        for port_name, port_code in port_database.items():
+            if port_name in user_lower or port_name.replace(' ', '') in user_lower:
+                identified_ports.append(port_code)
+        
+        # Create custom routes for specific port pairs
+        if len(identified_ports) >= 2:
+            ship_type = scenario['ship_types'][0] if scenario['ship_types'] else 'PASSENGER'
+            scenario['custom_routes'] = [{
+                'ship_type': ship_type,
+                'ship_name': f'{ship_type}_ROUTE_{random.randint(100, 999)}',
+                'start_port': identified_ports[0],
+                'end_port': identified_ports[1]
+            }]
+        
+        # Smart scenario naming
+        if scenario['custom_routes']:
+            start = scenario['custom_routes'][0]['start_port']
+            end = scenario['custom_routes'][0]['end_port']
+            scenario['scenario_name'] = f'route_{start}_to_{end}'
+        elif scenario['scenario_type']:
+            scenario['scenario_name'] = f"{scenario['scenario_type']}_scenario"
+        elif scenario['region'] != 'irish_sea':
+            scenario['scenario_name'] = f"{scenario['region']}_scenario"
+        
+        return scenario
     
     def clear_conversation(self):
         """Clear conversation history"""

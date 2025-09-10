@@ -98,6 +98,137 @@ class WorldwideRoutes:
         return all_ports  # Return all if region not found
     
     @classmethod
+    def get_region_coordinates(cls, region: str) -> Dict[str, Position]:
+        """Get typical coordinates for maritime regions - used when no specific ports mentioned"""
+        
+        region_coordinates = {
+            # Mediterranean sub-regions
+            "mediterranean": {
+                "WESTERN_MED": Position(latitude=41.0, longitude=2.0),    # Near Barcelona
+                "CENTRAL_MED": Position(latitude=40.0, longitude=14.0),   # Near Naples
+                "EASTERN_MED": Position(latitude=36.0, longitude=28.0),   # Near Turkey/Greece
+                "SICILY_AREA": Position(latitude=37.5, longitude=13.5),   # Sicily coast
+                "CORSICA_AREA": Position(latitude=42.0, longitude=9.0),   # Corsica
+            },
+            "north_sea": {
+                "SOUTHERN_NS": Position(latitude=52.0, longitude=4.0),    # Dutch waters
+                "CENTRAL_NS": Position(latitude=55.0, longitude=3.0),     # Between UK/Norway
+                "NORTHERN_NS": Position(latitude=58.0, longitude=1.0),    # Norwegian waters
+                "DOGGER_BANK": Position(latitude=54.6, longitude=2.0),    # Fishing grounds
+            },
+            "atlantic": {
+                "NORTH_ATLANTIC": Position(latitude=50.0, longitude=-30.0), # Mid-Atlantic
+                "SOUTH_ATLANTIC": Position(latitude=-20.0, longitude=-10.0), # South Atlantic
+                "WESTERN_ATLANTIC": Position(latitude=40.0, longitude=-60.0), # US coast
+            },
+            "caribbean": {
+                "EASTERN_CARIBBEAN": Position(latitude=15.0, longitude=-60.0), # Lesser Antilles
+                "WESTERN_CARIBBEAN": Position(latitude=20.0, longitude=-85.0), # Near Mexico
+                "CENTRAL_CARIBBEAN": Position(latitude=18.0, longitude=-75.0), # Jamaica area
+            },
+            "pacific": {
+                "NORTH_PACIFIC": Position(latitude=35.0, longitude=140.0),  # Japan area
+                "SOUTH_PACIFIC": Position(latitude=-20.0, longitude=170.0), # Near Fiji
+                "EASTERN_PACIFIC": Position(latitude=30.0, longitude=-120.0), # California
+            },
+            "irish_sea": {
+                "CENTRAL_IRISH": Position(latitude=53.5, longitude=-5.0),   # Center Irish Sea
+                "NORTHERN_IRISH": Position(latitude=54.5, longitude=-5.5),  # Near Belfast
+                "SOUTHERN_IRISH": Position(latitude=52.0, longitude=-5.5),  # Near Wales
+            },
+            "baltic_sea": {
+                "CENTRAL_BALTIC": Position(latitude=57.0, longitude=18.0),   # Central Baltic
+                "SOUTHERN_BALTIC": Position(latitude=54.5, longitude=14.0),  # German/Polish coast
+                "NORTHERN_BALTIC": Position(latitude=60.0, longitude=20.0),  # Finnish waters
+            },
+            "english_channel": {
+                "DOVER_STRAIT": Position(latitude=50.9, longitude=1.4),     # Dover area
+                "WESTERN_CHANNEL": Position(latitude=49.5, longitude=-3.0), # Western approach
+                "CENTRAL_CHANNEL": Position(latitude=50.0, longitude=-1.0), # Central channel
+            }
+        }
+        
+        return region_coordinates.get(region.lower(), {})
+    
+    @classmethod
+    def get_smart_coordinates_for_location(cls, location_hint: str) -> Position:
+        """Intelligently determine coordinates based on location mentions"""
+        
+        location_lower = location_hint.lower()
+        
+        # Specific geographical areas
+        location_mapping = {
+            # Mediterranean specific areas
+            'sicily': Position(latitude=37.5, longitude=13.8),      # Sicily coast
+            'coast of sicily': Position(latitude=37.3, longitude=13.5),
+            'off sicily': Position(latitude=37.0, longitude=13.0),
+            'italian coast': Position(latitude=40.5, longitude=14.0),
+            'spanish coast': Position(latitude=41.2, longitude=2.0),
+            'french riviera': Position(latitude=43.5, longitude=7.0),
+            'greek islands': Position(latitude=37.0, longitude=25.0),
+            'turkish coast': Position(latitude=36.5, longitude=30.0),
+            
+            # North Sea areas
+            'norwegian waters': Position(latitude=58.0, longitude=5.0),
+            'danish waters': Position(latitude=56.0, longitude=10.0),  
+            'dutch coast': Position(latitude=52.5, longitude=4.0),
+            'german bight': Position(latitude=54.0, longitude=7.5),
+            'shetland islands': Position(latitude=60.5, longitude=-1.0),
+            
+            # Atlantic areas  
+            'azores': Position(latitude=38.0, longitude=-28.0),
+            'canary islands': Position(latitude=28.0, longitude=-16.0),
+            'bay of biscay': Position(latitude=44.0, longitude=-4.0),
+            'newfoundland': Position(latitude=48.0, longitude=-50.0),
+            
+            # Caribbean areas
+            'bahamas': Position(latitude=24.0, longitude=-76.0),
+            'jamaica': Position(latitude=18.0, longitude=-77.0),
+            'puerto rico': Position(latitude=18.2, longitude=-66.5),
+            'barbados': Position(latitude=13.1, longitude=-59.6),
+            
+            # Pacific areas
+            'hawaii': Position(latitude=21.0, longitude=-157.0),
+            'california coast': Position(latitude=34.0, longitude=-120.0),
+            'japan waters': Position(latitude=35.0, longitude=140.0),
+            'philippines': Position(latitude=12.0, longitude=122.0),
+            
+            # Baltic areas
+            'stockholm archipelago': Position(latitude=59.5, longitude=18.5),
+            'finnish waters': Position(latitude=60.0, longitude=24.0),
+            'gulf of bothnia': Position(latitude=63.0, longitude=20.0),
+            
+            # Other specific areas
+            'gibraltar': Position(latitude=36.1, longitude=-5.3),
+            'suez canal': Position(latitude=30.0, longitude=32.5),
+            'bering strait': Position(latitude=65.8, longitude=-168.0),
+            'panama canal': Position(latitude=9.0, longitude=-79.5),
+        }
+        
+        # Check for specific location matches
+        for location, coords in location_mapping.items():
+            if location in location_lower:
+                return coords
+        
+        # Fallback to region coordinates
+        region_coords = {
+            'mediterranean': Position(latitude=40.0, longitude=15.0),
+            'north sea': Position(latitude=55.0, longitude=3.0),
+            'atlantic': Position(latitude=45.0, longitude=-25.0),
+            'pacific': Position(latitude=30.0, longitude=150.0),
+            'caribbean': Position(latitude=18.0, longitude=-70.0),
+            'baltic': Position(latitude=57.0, longitude=18.0),
+            'irish sea': Position(latitude=53.5, longitude=-5.0),
+        }
+        
+        for region, coords in region_coords.items():
+            if region in location_lower:
+                return coords
+        
+        # Ultimate fallback - Irish Sea
+        return Position(latitude=53.5, longitude=-5.0)
+    
+    @classmethod
     def get_ferry_routes(cls, region: str = "irish_sea") -> List[Tuple[Position, Position, str]]:
         """Get ferry routes by region"""
         if region.lower() == "irish_sea":
@@ -488,7 +619,7 @@ class MultiShipGenerator:
         """Generate multiple ships in Irish Sea with realistic routes"""
         return self.generate_maritime_scenario(num_ships, region="irish_sea")
     
-    def generate_maritime_scenario(self, num_ships: int = 3, region: str = "irish_sea") -> List[RealisticShipMovement]:
+    def generate_maritime_scenario(self, num_ships: int = 3, region: str = "irish_sea", location_hint: str = None) -> List[RealisticShipMovement]:
         """Generate multiple ships in any maritime region with realistic routes"""
         
         ships = []
@@ -498,8 +629,8 @@ class MultiShipGenerator:
             # Choose ship type
             ship_type, route_type = self._choose_ship_and_route_type(i, num_ships)
             
-            # Get route based on type and region
-            route, route_name = self._get_route_for_type(route_type, routes_used, region)
+            # Get route based on type, region, and location hint
+            route, route_name = self._get_route_for_type(route_type, routes_used, region, location_hint)
             routes_used.add(route_name)
             
             # Create ship
@@ -528,9 +659,10 @@ class MultiShipGenerator:
         combo_index = ship_index % len(type_combinations)
         return type_combinations[combo_index]
     
-    def _get_route_for_type(self, route_type: RouteType, routes_used: set, region: str = "irish_sea") -> Tuple[Route, str]:
-        """Get a route based on the route type and region"""
+    def _get_route_for_type(self, route_type: RouteType, routes_used: set, region: str = "irish_sea", location_hint: str = None) -> Tuple[Route, str]:
+        """Get a route based on the route type, region, and location hint"""
         
+        # First try to get predefined routes for the region
         if route_type == RouteType.FERRY:
             routes = self.routes_class.get_ferry_routes(region)
         elif route_type == RouteType.CARGO:
@@ -540,18 +672,114 @@ class MultiShipGenerator:
         elif route_type == RouteType.PATROL:
             routes = self.routes_class.get_coastal_patrol_routes(region)
         else:  # COASTAL
-            routes = self.routes_class.get_ferry_routes(region)  # Use ferry routes but different behavior
+            routes = self.routes_class.get_ferry_routes(region)
         
-        # Try to find unused route
+        # Try to find unused route from predefined routes
         for start_pos, end_pos, name in routes:
             if name not in routes_used:
-                route = Route(start_pos, end_pos, 12.0)  # Base speed, will be adjusted
+                route = Route(start_pos, end_pos, 12.0)
                 return route, name
         
-        # If all used, pick random one
-        start_pos, end_pos, name = random.choice(routes)
+        # If no predefined routes or all used, generate intelligent routes using location hint
+        if location_hint:
+            return self._generate_intelligent_route(route_type, region, location_hint, len(routes_used))
+        elif region != "irish_sea":
+            # Generate route using region coordinates
+            return self._generate_regional_route(route_type, region, len(routes_used))
+        
+        # Fallback: pick random from available routes
+        if routes:
+            start_pos, end_pos, name = random.choice(routes)
+            route = Route(start_pos, end_pos, 12.0)
+            return route, f"{name}_{len(routes_used)}"
+        
+        # Ultimate fallback: generate basic route
+        return self._generate_basic_route(route_type, len(routes_used))
+    
+    def _generate_intelligent_route(self, route_type: RouteType, region: str, location_hint: str, route_index: int) -> Tuple[Route, str]:
+        """Generate an intelligent route based on location hint"""
+        
+        # Get smart coordinates for the location
+        center_pos = self.routes_class.get_smart_coordinates_for_location(location_hint)
+        
+        # Generate start and end positions around the center
+        import random
+        import math
+        
+        # Create routes that make sense for the area
+        if route_type == RouteType.FISHING:
+            # Fishing boats work in circular patterns
+            radius = 0.3  # degrees (about 20 nautical miles)
+            angle1 = random.uniform(0, 2 * math.pi)
+            angle2 = angle1 + math.pi / 3  # 60 degrees apart
+            
+            start_pos = Position(
+                latitude=center_pos.latitude + radius * math.cos(angle1),
+                longitude=center_pos.longitude + radius * math.sin(angle1)
+            )
+            end_pos = Position(
+                latitude=center_pos.latitude + radius * math.cos(angle2), 
+                longitude=center_pos.longitude + radius * math.sin(angle2)
+            )
+            route_name = f"Fishing_Grounds_{location_hint.replace(' ', '_')}_{route_index}"
+            
+        elif route_type == RouteType.PATROL:
+            # Patrol boats work back and forth
+            distance = 0.5  # degrees (about 30 nautical miles)
+            bearing = random.uniform(0, 2 * math.pi)
+            
+            start_pos = Position(
+                latitude=center_pos.latitude + distance * math.cos(bearing),
+                longitude=center_pos.longitude + distance * math.sin(bearing)
+            )
+            end_pos = Position(
+                latitude=center_pos.latitude - distance * math.cos(bearing),
+                longitude=center_pos.longitude - distance * math.sin(bearing)
+            )
+            route_name = f"Patrol_{location_hint.replace(' ', '_')}_{route_index}"
+            
+        else:
+            # Ferry/cargo routes - point to point
+            distance = 1.0  # degrees (about 60 nautical miles)
+            bearing = random.uniform(0, 2 * math.pi)
+            
+            start_pos = Position(
+                latitude=center_pos.latitude + distance * 0.5 * math.cos(bearing),
+                longitude=center_pos.longitude + distance * 0.5 * math.sin(bearing)
+            )
+            end_pos = Position(
+                latitude=center_pos.latitude - distance * 0.5 * math.cos(bearing),
+                longitude=center_pos.longitude - distance * 0.5 * math.sin(bearing)
+            )
+            route_name = f"{route_type.value.title()}_{location_hint.replace(' ', '_')}_{route_index}"
+        
         route = Route(start_pos, end_pos, 12.0)
-        return route, f"{name}_{len(routes_used)}"
+        return route, route_name
+    
+    def _generate_regional_route(self, route_type: RouteType, region: str, route_index: int) -> Tuple[Route, str]:
+        """Generate route using regional coordinates"""
+        
+        region_coords = self.routes_class.get_region_coordinates(region)
+        
+        if region_coords:
+            # Pick a random area from the region
+            area_name, center_pos = random.choice(list(region_coords.items()))
+            return self._generate_intelligent_route(route_type, region, area_name.replace('_', ' '), route_index)
+        
+        # Fallback to basic generation
+        return self._generate_basic_route(route_type, route_index)
+    
+    def _generate_basic_route(self, route_type: RouteType, route_index: int) -> Tuple[Route, str]:
+        """Generate a basic fallback route"""
+        
+        # Irish Sea default positions
+        start_pos = Position(latitude=53.3, longitude=-6.0)  # Near Dublin
+        end_pos = Position(latitude=53.4, longitude=-4.5)    # Near Holyhead
+        
+        route = Route(start_pos, end_pos, 12.0)
+        route_name = f"Default_{route_type.value}_{route_index}"
+        
+        return route, route_name
     
     def _generate_ship_name(self, ship_type: ShipType, index: int, region: str = "irish_sea") -> str:
         """Generate realistic ship name based on type and region"""
