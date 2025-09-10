@@ -20,6 +20,7 @@ import logging
 
 # Import your track generator classes
 from vessel_track_generator import VesselTrackMCPServer, VesselPromptParser, VesselTrackGenerator
+from nmea_ais_encoder import NMEAAISEncoder
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -28,6 +29,7 @@ logger = logging.getLogger("vessel-track-server")
 class MCPVesselTrackServer:
     def __init__(self):
         self.track_service = VesselTrackMCPServer()
+        self.nmea_encoder = NMEAAISEncoder()
         self.server = Server("vessel-track-generator")
         
         # Store generated tracks for later access
@@ -97,6 +99,32 @@ class MCPVesselTrackServer:
                     },
                     "required": ["track_id"]
                 }
+            ),
+            Tool(
+                name="encode_tracks_nmea",
+                description="Convert JSON vessel tracks to NMEA AIS messages (types 1, 2, 3, 5)",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "track_id": {
+                            "type": "string",
+                            "description": "ID of the track set to encode (from previous generation)"
+                        },
+                        "message_types": {
+                            "type": "array",
+                            "items": {"type": "integer"},
+                            "description": "AIS message types to generate (1, 2, 3, 5). Default: [1, 2, 3, 5]",
+                            "default": [1, 2, 3, 5]
+                        },
+                        "output_format": {
+                            "type": "string",
+                            "enum": ["detailed", "simple", "by_vessel"],
+                            "description": "Output format for NMEA messages. Default: detailed",
+                            "default": "detailed"
+                        }
+                    },
+                    "required": ["track_id"]
+                }
             )
         ]
 
@@ -109,6 +137,8 @@ class MCPVesselTrackServer:
                 return await self._handle_export_geojson(arguments)
             elif name == "get_track_statistics":
                 return await self._handle_track_statistics(arguments)
+            elif name == "encode_tracks_nmea":
+                return await self._handle_encode_nmea(arguments)
             else:
                 raise ValueError(f"Unknown tool: {name}")
         
@@ -187,6 +217,46 @@ class MCPVesselTrackServer:
             type="text",
             text=stats
         )]
+
+    async def _handle_encode_nmea(self, arguments: dict) -> list[TextContent]:
+        """Convert tracks to NMEA AIS messages"""
+        track_id = arguments.get("track_id", "")
+        message_types = arguments.get("message_types", [1, 2, 3, 5])
+        output_format = arguments.get("output_format", "detailed")
+        
+        if track_id not in self.generated_tracks:
+            return [TextContent(
+                type="text",
+                text=f"Track ID '{track_id}' not found. Available IDs: {list(self.generated_tracks.keys())}"
+            )]
+        
+        tracks_data = self.generated_tracks[track_id]
+        
+        try:
+            # Encode tracks to NMEA
+            nmea_data = self.nmea_encoder.encode_tracks_to_nmea(tracks_data, message_types)
+            
+            # Format output
+            formatted_output = self.nmea_encoder.format_nmea_output(nmea_data, output_format)
+            
+            # Add summary
+            metadata = nmea_data.get("metadata", {})
+            summary = f"✅ Successfully encoded {metadata.get('total_vessels', 0)} vessels to NMEA AIS messages\n"
+            summary += f"• Total messages generated: {metadata.get('total_messages', 0)}\n"
+            summary += f"• Message types: {', '.join(map(str, metadata.get('message_types_generated', [])))}\n"
+            summary += f"• Output format: {output_format}\n\n"
+            
+            return [TextContent(
+                type="text",
+                text=summary + formatted_output
+            )]
+            
+        except Exception as e:
+            logger.error(f"Error encoding NMEA: {e}")
+            return [TextContent(
+                type="text",
+                text=f"Error encoding tracks to NMEA: {str(e)}"
+            )]
 
     def _format_track_summary(self, result: dict, track_id: str) -> str:
         """Format a summary of generated tracks"""
