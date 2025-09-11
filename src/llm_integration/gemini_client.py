@@ -150,8 +150,8 @@ Please respond helpfully about AIS ship generation. If they're asking for inform
              any(word in user_lower for word in ['ship', 'ships', 'vessel', 'boat'])) or
             # Standalone tanker/convoy keywords
             any(word in user_lower for word in ['tanker', 'tankers', 'convoy']) or
-            # Number + ship pattern (e.g., "5 tankers", "3 ships")
-            bool(re.search(r'\d+\s*(ships?|vessels?|boats?|tankers?|convoy)', user_lower))
+            # Number + ship pattern (e.g., "5 tankers", "3 ships", "5 cargo ships")
+            bool(re.search(r'\d+\s*(?:\w+\s+)?(?:ships?|vessels?|boats?|tankers?|convoy)', user_lower))
         ):
             # Use advanced scenario parsing
             scenario_details = self._parse_sophisticated_scenario(user_message)

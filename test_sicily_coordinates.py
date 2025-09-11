@@ -10,7 +10,7 @@ from pathlib import Path
 # Add src to path
 sys.path.append(str(Path(__file__).parent / "src"))
 
-from src.llm_integration.demo_client import AISDemo
+from src.llm_integration.gemini_client import AISGeminiClient
 from src.generators.ais_generator import WorldwideRoutes
 
 
@@ -19,7 +19,13 @@ async def test_sicily_coordinate_detection():
     print("🏝️ Testing Sicily Coordinate Detection")
     print("=" * 50)
     
-    client = AISDemo()
+    # Note: These tests now require GEMINI_KEY environment variable
+    try:
+        client = AISGeminiClient()
+    except Exception as e:
+        print(f"❌ Cannot create Gemini client: {e}")
+        print("💡 Set GEMINI_KEY environment variable to run these tests")
+        return
     
     # Test various Sicily-related requests
     sicily_requests = [
@@ -90,7 +96,13 @@ async def test_full_sicily_scenario():
     print("\n🚢 Testing Full Sicily Scenario Generation")  
     print("=" * 50)
     
-    client = AISDemo()
+    # Note: These tests now require GEMINI_KEY environment variable
+    try:
+        client = AISGeminiClient()
+    except Exception as e:
+        print(f"❌ Cannot create Gemini client: {e}")
+        print("💡 Set GEMINI_KEY environment variable to run these tests")
+        return
     
     sicily_request = "Generate a convoy of 4 ships off the coast of Sicily for 3 hours"
     

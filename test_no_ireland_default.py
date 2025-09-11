@@ -10,7 +10,7 @@ from pathlib import Path
 # Add src to path
 sys.path.append(str(Path(__file__).parent / "src"))
 
-from src.llm_integration.demo_client import AISDemo
+from src.llm_integration.gemini_client import AISGeminiClient
 from src.generators.ais_generator import WorldwideRoutes
 
 
@@ -19,7 +19,13 @@ async def test_sicily_no_ireland():
     print("🏝️ Testing Sicily - No Ireland Default")
     print("=" * 50)
     
-    client = AISDemo()
+    # Note: These tests now require GEMINI_KEY environment variable
+    try:
+        client = AISGeminiClient()
+    except Exception as e:
+        print(f"❌ Cannot create Gemini client: {e}")
+        print("💡 Set GEMINI_KEY environment variable to run these tests")
+        return
     
     sicily_request = "Generate a convoy of 3 ships off the coast of Sicily"
     print(f"🎯 Request: '{sicily_request}'")
@@ -72,7 +78,13 @@ async def test_generic_request_no_ireland():
     print("\n🌊 Testing Generic Request - No Ireland Default")
     print("=" * 50)
     
-    client = AISDemo()
+    # Note: These tests now require GEMINI_KEY environment variable
+    try:
+        client = AISGeminiClient()
+    except Exception as e:
+        print(f"❌ Cannot create Gemini client: {e}")
+        print("💡 Set GEMINI_KEY environment variable to run these tests")
+        return
     
     generic_request = "Generate 3 ships"
     print(f"🎯 Request: '{generic_request}'")
@@ -128,7 +140,13 @@ async def test_various_locations():
     ]
     
     results = []
-    client = AISDemo()
+    # Note: These tests now require GEMINI_KEY environment variable
+    try:
+        client = AISGeminiClient()
+    except Exception as e:
+        print(f"❌ Cannot create Gemini client: {e}")
+        print("💡 Set GEMINI_KEY environment variable to run these tests")
+        return
     
     for request, expected_region in test_locations:
         print(f"\n📍 Testing: '{request}'")

@@ -154,8 +154,8 @@ class AISMCPServer:
                 elif ship_types:
                     ship_type_str = random.choice(ship_types).upper()
                 else:
-                    # Default ship type based on location context
-                    ship_type_str = self._infer_ship_type(location)
+                    # Generate variety of ship types for better visualization
+                    ship_type_str = self._get_varied_ship_type(i, num_ships, location)
                 
                 ship_type = self._str_to_ship_type(ship_type_str)
                 
@@ -363,6 +363,24 @@ class AISMCPServer:
                 return 'CARGO'  # Port areas likely cargo
             else:
                 return 'CARGO'  # Default to cargo ships
+    
+    def _get_varied_ship_type(self, ship_index: int, total_ships: int, location: str) -> str:
+        """Get varied ship types for better map visualization"""
+        # Define ship types in order of preference for variety
+        ship_types = ['CARGO', 'PASSENGER', 'FISHING', 'PILOT_VESSEL', 'HIGH_SPEED_CRAFT']
+        
+        # If we have more ships than types, cycle through them
+        if total_ships <= len(ship_types):
+            return ship_types[ship_index % len(ship_types)]
+        else:
+            # For many ships, mix types based on location context
+            base_type = self._infer_ship_type(location)
+            if ship_index == 0:
+                return base_type
+            else:
+                # Alternate between base type and other types
+                other_types = [t for t in ship_types if t != base_type]
+                return other_types[(ship_index - 1) % len(other_types)]
     
     def _str_to_ship_type(self, ship_type_str: str) -> ShipType:
         """Convert string to ShipType enum"""

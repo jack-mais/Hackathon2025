@@ -124,7 +124,6 @@ Type 'help' for more examples, 'quit' to exit.
 • `help` - Show this help
 • `clear` - Clear conversation history
 • `caps` - Show AI capabilities
-• `demo` - Run a quick demo
 • `quit` / `exit` - Exit the program
 
 ## **Generated Output:**
@@ -170,27 +169,6 @@ Type 'help' for more examples, 'quit' to exit.
         else:
             self.console.print("❌ AI not initialized or doesn't support conversation clearing", style="red")
     
-    async def run_demo(self):
-        """Run a quick demo"""
-        if not self.llm_client:
-            self.console.print("❌ AI not initialized", style="red")
-            return
-        
-        self.console.print("🎯 Running quick demo generation...", style="yellow")
-        
-        try:
-            if hasattr(self.llm_client, 'process_request'):
-                response = await self.llm_client.process_request("Generate 2 ships for a demo")
-            else:
-                response = "Demo functionality not available for this AI model."
-                
-            self.console.print(Panel(
-                Markdown(response),
-                title="🎯 Demo Result",
-                border_style="green"
-            ))
-        except Exception as e:
-            self.console.print(f"❌ Demo error: {e}", style="red")
     
     async def process_user_input(self, user_input: str) -> bool:
         """Process user input and return False if should exit"""
@@ -210,7 +188,9 @@ Type 'help' for more examples, 'quit' to exit.
             await self.show_capabilities()
             return True
         elif user_input_lower in ['demo', 'test']:
-            await self.run_demo()
+            # Demo functionality removed - Gemini only mode
+            self.console.print("🎯 Demo mode has been removed. Just describe what you want to generate!", style="yellow")
+            self.console.print("Example: 'Generate 3 ships near Southampton'", style="cyan")
             return True
         elif user_input_lower == '':
             return True

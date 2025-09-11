@@ -11,7 +11,7 @@ from pathlib import Path
 # Add src to path
 sys.path.append(str(Path(__file__).parent / "src"))
 
-from src.llm_integration.demo_client import AISDemo
+from src.llm_integration.gemini_client import AISGeminiClient
 from src.mcp_integration.mcp_server import AISMCPServer
 
 
@@ -20,7 +20,13 @@ async def test_sophisticated_requests():
     print("🚢 Testing Sophisticated Natural Language Scenarios")
     print("=" * 60)
     
-    client = AISDemo()
+    # Note: These tests now require GEMINI_KEY environment variable
+    try:
+        client = AISGeminiClient()
+    except Exception as e:
+        print(f"❌ Cannot create Gemini client: {e}")
+        print("💡 Set GEMINI_KEY environment variable to run these tests")
+        return
     
     # Advanced scenario requests that should now be handled much better
     sophisticated_requests = [
@@ -143,7 +149,13 @@ async def test_parameter_variety():
     print("\n📊 Testing Parameter Variety")
     print("=" * 35)
     
-    client = AISDemo()
+    # Note: These tests now require GEMINI_KEY environment variable
+    try:
+        client = AISGeminiClient()
+    except Exception as e:
+        print(f"❌ Cannot create Gemini client: {e}")
+        print("💡 Set GEMINI_KEY environment variable to run these tests")
+        return
     
     # Test different durations
     duration_tests = [

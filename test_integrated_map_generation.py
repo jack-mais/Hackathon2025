@@ -12,7 +12,7 @@ from pathlib import Path
 # Add src to path
 sys.path.append(str(Path(__file__).parent / "src"))
 
-from src.llm_integration.demo_client import AISDemo
+from src.llm_integration.gemini_client import AISGeminiClient
 from src.mcp_integration.mcp_server import AISMCPServer
 
 
@@ -79,7 +79,13 @@ async def test_demo_client_integrated_output():
     print("\n🚢 Testing Demo Client - Integrated Output Messages")
     print("=" * 50)
     
-    client = AISDemo()
+    # Note: These tests now require GEMINI_KEY environment variable
+    try:
+        client = AISGeminiClient()
+    except Exception as e:
+        print(f"❌ Cannot create Gemini client: {e}")
+        print("💡 Set GEMINI_KEY environment variable to run these tests")
+        return
     
     test_requests = [
         "Generate 2 ships in the North Sea",
