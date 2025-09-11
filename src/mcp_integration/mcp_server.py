@@ -252,6 +252,8 @@ class AISMCPServer:
             'barcelona': Position(latitude=41.3851, longitude=2.1734),
             'naples': Position(latitude=40.8518, longitude=14.2681),
             'venice': Position(latitude=45.4408, longitude=12.3155),
+            'piraeus': Position(latitude=37.9755, longitude=23.7348),
+            'athens': Position(latitude=37.9755, longitude=23.7348),
             
             # Other major ports
             'new york': Position(latitude=40.7128, longitude=-74.0060),
@@ -315,9 +317,121 @@ class AISMCPServer:
                 lon = -lon
             return Position(latitude=lat, longitude=lon)
         
-        # Default fallback - generic ocean position
-        print(f"⚠️ Unknown location '{location_str}', using default coordinates")
+        # Try geocoding for unknown locations
+        print(f"🔍 Unknown location '{location_str}', attempting geocoding...")
+        geocoded_coords = self._geocode_location(location_str)
+        if geocoded_coords:
+            print(f"✅ Found coordinates for '{location_str}': {geocoded_coords.latitude:.4f}, {geocoded_coords.longitude:.4f}")
+            return geocoded_coords
+        
+        # Final fallback - generic ocean position
+        print(f"⚠️ Could not geocode '{location_str}', using default coordinates")
         return Position(latitude=50.0, longitude=0.0)  # English Channel
+    
+    def _geocode_location(self, location_str: str) -> Optional[Position]:
+        """Attempt to geocode an unknown location using a simple lookup"""
+        location_lower = location_str.lower().strip()
+        
+        # Extended port database for common maritime locations
+        extended_ports = {
+            # Greek ports
+            'piraeus': Position(latitude=37.9755, longitude=23.7348),
+            'athens': Position(latitude=37.9755, longitude=23.7348),
+            'thessaloniki': Position(latitude=40.6401, longitude=22.9444),
+            'patras': Position(latitude=38.2466, longitude=21.7346),
+            'heraklion': Position(latitude=35.3088, longitude=25.1634),
+            'rhodes': Position(latitude=36.4412, longitude=28.2225),
+            
+            # Italian ports
+            'genoa': Position(latitude=44.4056, longitude=8.9463),
+            'livorno': Position(latitude=43.5481, longitude=10.3103),
+            'civitavecchia': Position(latitude=42.0936, longitude=11.7964),
+            'bari': Position(latitude=41.1177, longitude=16.8719),
+            'palermo': Position(latitude=38.1157, longitude=13.3613),
+            'catania': Position(latitude=37.5079, longitude=15.0830),
+            'messina': Position(latitude=38.1938, longitude=15.5540),
+            
+            # Spanish ports
+            'valencia': Position(latitude=39.4699, longitude=-0.3763),
+            'bilbao': Position(latitude=43.2627, longitude=-2.9253),
+            'vigo': Position(latitude=42.2406, longitude=-8.7207),
+            'malaga': Position(latitude=36.7213, longitude=-4.4214),
+            'algeciras': Position(latitude=36.1408, longitude=-5.4565),
+            
+            # French ports
+            'le havre': Position(latitude=49.4944, longitude=0.1079),
+            'dunkirk': Position(latitude=51.0344, longitude=2.3768),
+            'calais': Position(latitude=50.9513, longitude=1.8587),
+            'toulon': Position(latitude=43.1242, longitude=5.9280),
+            'nice': Position(latitude=43.7102, longitude=7.2620),
+            
+            # Turkish ports
+            'istanbul': Position(latitude=41.0082, longitude=28.9784),
+            'izmir': Position(latitude=38.4192, longitude=27.1287),
+            'antalya': Position(latitude=36.8969, longitude=30.7133),
+            'mersin': Position(latitude=36.8000, longitude=34.6333),
+            
+            # Croatian ports
+            'split': Position(latitude=43.5081, longitude=16.4402),
+            'dubrovnik': Position(latitude=42.6507, longitude=18.0944),
+            'rijeka': Position(latitude=45.3271, longitude=14.4422),
+            
+            # Other Mediterranean ports
+            'alexandria': Position(latitude=31.2001, longitude=29.9187),
+            'tunis': Position(latitude=36.8065, longitude=10.1815),
+            'algiers': Position(latitude=36.7538, longitude=3.0588),
+            'casablanca': Position(latitude=33.5731, longitude=-7.5898),
+            
+            # North African ports
+            'tripoli': Position(latitude=32.8872, longitude=13.1913),
+            'benghazi': Position(latitude=32.1284, longitude=20.0817),
+            
+            # Middle Eastern ports
+            'haifa': Position(latitude=32.7940, longitude=34.9896),
+            'tel aviv': Position(latitude=32.0853, longitude=34.7818),
+            'beirut': Position(latitude=33.8938, longitude=35.5018),
+            'limassol': Position(latitude=34.7071, longitude=33.0226),
+            
+            # Black Sea ports
+            'odessa': Position(latitude=46.4825, longitude=30.7233),
+            'sevastopol': Position(latitude=44.6167, longitude=33.5254),
+            'sochi': Position(latitude=43.5855, longitude=39.7231),
+            'constanta': Position(latitude=44.1598, longitude=28.6348),
+            'varna': Position(latitude=43.2047, longitude=27.9105),
+            
+            # Regional descriptions
+            'aegean sea': Position(latitude=38.0, longitude=25.0),
+            'ionian sea': Position(latitude=37.5, longitude=19.0),
+            'adriatic sea': Position(latitude=43.0, longitude=15.0),
+            'black sea': Position(latitude=43.0, longitude=34.0),
+            'red sea': Position(latitude=22.0, longitude=38.0),
+            'persian gulf': Position(latitude=26.0, longitude=52.0),
+            'gulf of mexico': Position(latitude=25.0, longitude=-90.0),
+            'caribbean sea': Position(latitude=15.0, longitude=-75.0),
+        }
+        
+        # Check extended port database
+        for port_name, coords in extended_ports.items():
+            if port_name in location_lower:
+                return coords
+        
+        # Try to extract city/country combinations
+        if 'port' in location_lower or 'harbor' in location_lower or 'harbour' in location_lower:
+            # Remove port/harbor keywords and try again
+            clean_location = location_lower.replace('port', '').replace('harbor', '').replace('harbour', '').strip()
+            for port_name, coords in extended_ports.items():
+                if port_name in clean_location:
+                    return coords
+        
+        # Try common maritime region patterns
+        if 'coast' in location_lower or 'off' in location_lower:
+            # Extract the main location name
+            main_location = location_lower.replace('coast of', '').replace('off', '').replace('coast', '').strip()
+            for port_name, coords in extended_ports.items():
+                if port_name in main_location:
+                    return coords
+        
+        return None
     
     def _generate_nearby_position(self, start_pos: Position, ship_type: ShipType) -> Position:
         """Generate a nearby position for local area movement"""
