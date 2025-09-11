@@ -4,7 +4,7 @@
 
 ## Project Overview
 
-This hackathon project creates an **LLM-powered AIS** (Automatic Identification System) data generator that can take natural language prompts like "Generate AIS NMEA data for 2 ships roaming about the Irish sea" and produce realistic maritime tracking data saved to JSON files.
+This hackathon project creates an **LLM-powered AIS** (Automatic Identification System) data generator that can take natural language prompts like "Generate AIS NMEA data for 2 ships roaming about the Irish sea" or "Create a convoy off the coast of Sicily" and produce realistic maritime tracking data with worldwide port coverage, saved to JSON files with interactive maps.
 
 ### ✅ **COMPLETED** - All Phases Functional
 
@@ -24,17 +24,21 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Set API Key (Optional)
-Create a `.env` file:
+### 2. Set API Key
+Create a `.env` file in the project root:
 ```env
-# Google Gemini (Recommended - Free tier)
+# Google Gemini (Primary - Free tier with 1500 requests/day)
 GEMINI_KEY=your_gemini_api_key_here
 
-# Or OpenAI (Optional)
+# Optional: OpenAI (Alternative LLM)
 OPENAI_API_KEY=your_openai_api_key_here
-
-# No API key? No problem - Demo mode works without any keys!
 ```
+
+**🔑 Get your free Gemini API key:**
+1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Sign in with Google account
+3. Create API key (free tier: 1500 requests/day)
+4. Copy to `.env` file as shown above
 
 ### 3. Start Using
 
@@ -62,16 +66,24 @@ python map_viewer.py          # Single ship visualization
 ## 🎯 Core Features
 
 ### 🤖 AI-Powered Generation
-- **Natural Language Interface**: "Generate 3 ships in the Irish Sea"
-- **Smart Routing**: AI understands ports, ship types, and realistic patterns
-- **Multiple LLMs**: Gemini (free), OpenAI, or Demo mode
-- **Maritime Knowledge**: Built-in understanding of ship types and behaviors
+- **Natural Language Interface**: "Generate 3 ships near Sicily" or "Create cargo convoy from Barcelona to Naples"
+- **Smart Routing**: AI understands worldwide ports, ship types, and realistic patterns
+- **Primary LLM**: Google Gemini (free tier 1500 requests/day)
+- **Maritime Knowledge**: Built-in understanding of ship types, worldwide ports, and behaviors
+
+### 🌍 Worldwide Port Coverage
+- **Irish Sea**: Dublin, Liverpool, Holyhead, Belfast, Cork, Cardiff
+- **Mediterranean**: Barcelona, Marseille, Naples, Venice, Athens, Istanbul
+- **North Sea**: Rotterdam, Hamburg, Antwerp, Copenhagen, Oslo
+- **Atlantic**: Lisbon, Southampton, Brest, Cadiz
+- **Asia**: Singapore, Shanghai, Hong Kong, Tokyo, Mumbai
+- **Americas**: New York, Los Angeles, Miami, Santos, Vancouver
 
 ### 🚢 Realistic Ship Simulation  
-- **Ship Types**: Passenger ferries, Cargo ships, Fishing vessels, Patrol boats, High-speed craft
+- **Ship Types**: Passenger ferries, Cargo ships, Fishing vessels, Pilot boats, High-speed craft
 - **Realistic Routes**: Ferry lines, cargo lanes, fishing patterns, patrol circuits
 - **Accurate Physics**: Speed, course, turning rates per ship type
-- **Rich Metadata**: Names, dimensions, navigation status
+- **Rich Metadata**: Names, dimensions, navigation status, MMSI codes
 
 ### 📊 Professional Output
 - **JSON Format**: Structured data with metadata and position reports
@@ -81,33 +93,51 @@ python map_viewer.py          # Single ship visualization
 
 ## 💬 Example AI Conversations
 
-**User:** "Generate 3 ships in the Irish Sea"  
-**AI:** *Creates mixed ship types with realistic routes and saves to JSON*
+**User:** "Generate a convoy off the coast of Sicily"  
+**AI:** *Creates mixed ship types around Sicily with realistic Mediterranean routes*
 
-**User:** "I need 2 cargo ships from Dublin to Liverpool and 1 ferry"  
-**AI:** *Generates specific ship types with custom routes*
+**User:** "I need 2 cargo ships from Barcelona to Naples"  
+**AI:** *Generates cargo vessels with specific Mediterranean route*
 
-**User:** "Create a 4-hour simulation with fishing vessels"  
-**AI:** *Generates fishing boats with circular patterns for 4 hours*
+**User:** "Create fishing vessels in Norwegian waters"  
+**AI:** *Generates Norwegian fishing fleet with circular fishing patterns*
+
+**User:** "Generate 3 ships near Singapore for 6 hours"  
+**AI:** *Creates Asian port scenario with cargo and passenger ships*
 
 ## 📁 File Structure (Clean & Organized)
 
 ```
 📦 AIS Generator
-├── 🤖 ais_chat.py              # Main AI chat interface
-├── 🧪 test_all.py              # Comprehensive test suite
+├── 🤖 ais_chat.py              # Main Gemini AI chat interface
 ├── ⚡ quick_demo.py             # Quick demo generation
 ├── 🗺️  map_multi_viewer.py      # Multi-ship map visualization
 ├── 🗺️  map_viewer.py            # Single ship map visualization  
 ├── 🌐 start_server.py          # FastAPI server
 ├── 📁 src/                     # Core source code
 │   ├── core/                   # Data models & file I/O
+│   │   ├── models.py           # Ship, Position, Route models
+│   │   └── file_output.py      # JSON/NMEA file management
 │   ├── generators/             # AIS & multi-ship generators
-│   ├── llm_integration/        # Gemini, OpenAI, Demo clients
+│   │   ├── ais_generator.py    # Unified worldwide generator
+│   │   └── nmea_formatter.py   # NMEA 0183 sentence formatting
+│   ├── llm_integration/        # LLM clients
+│   │   └── gemini_client.py    # Google Gemini API client
 │   ├── mcp_integration/        # MCP server for LLM tools
+│   │   └── mcp_server.py       # Maritime tool server
 │   └── main.py                # FastAPI application
-├── 📁 output/                  # Generated JSON & NMEA files
+├── 🧪 Test Suite               # Comprehensive testing
+│   ├── test_all.py             # Run all tests
+│   ├── test_crawl.py           # Single ship tests
+│   ├── test_walk.py            # Multi-ship tests
+│   ├── test_gemini_only.py     # Gemini integration tests
+│   ├── test_worldwide_context.py # Global port tests
+│   ├── test_sophisticated_scenarios.py # Complex scenarios
+│   └── test_integrated_map_generation.py # Map generation tests
+├── 📁 output/                  # Generated files (JSON, HTML maps, KML)
+├── 🐳 docker-compose.yml       # Docker deployment
 ├── 📄 requirements.txt         # Python dependencies
+├── 📋 TECHNICAL_ARCHITECTURE.md # Detailed technical docs
 └── 📋 README.md               # This file
 ```
 
@@ -119,10 +149,11 @@ python map_viewer.py          # Single ship visualization
 - Professional logging and output
 - Docker containerization support
 
-### ✅ **LLM Flexibility** 
-- **Gemini**: Free tier, fast responses (recommended)
-- **OpenAI**: Enterprise-grade accuracy
-- **Demo Mode**: Works without any API keys
+### ✅ **LLM Integration** 
+- **Google Gemini**: Primary AI engine with generous free tier (1500 requests/day)
+- **OpenAI GPT**: Optional alternative for enterprise use
+- **Natural Language Processing**: Understands complex maritime requests
+- **Worldwide Context**: AI knows global ports and realistic shipping routes
 
 ### ✅ **Real-World Applicable**
 - Industry-standard NMEA format
@@ -149,6 +180,32 @@ python map_multi_viewer.py
 python start_server.py
 ```
 
+## 🧪 Comprehensive Testing
+
+The project includes extensive test coverage for all functionality:
+
+```bash
+# Run all tests (recommended)
+python test_all.py
+
+# Specific test categories
+python test_crawl.py              # Single ship movement tests
+python test_walk.py               # Multi-ship scenario tests
+python test_gemini_only.py        # Gemini AI integration tests
+python test_worldwide_context.py  # Global port coverage tests
+python test_sophisticated_scenarios.py # Complex maritime scenarios
+python test_integrated_map_generation.py # Map visualization tests
+```
+
+**Test Coverage:**
+- ✅ Single ship point-to-point movement
+- ✅ Multi-ship complex scenarios
+- ✅ Gemini AI natural language processing
+- ✅ Worldwide port database (50+ major ports)
+- ✅ Interactive map generation (HTML + KML)
+- ✅ JSON and NMEA output format validation
+- ✅ Ship physics and navigation accuracy
+
 ## 🛠️ Technical Architecture
 
 **LLM Layer** → **MCP Protocol** → **Multi-Ship Generator** → **JSON/NMEA Output** → **Interactive Maps**
@@ -160,22 +217,52 @@ python start_server.py
 ```json
 {
   "metadata": {
-    "scenario_name": "gemini_irish_sea_3_ships",
-    "generated_at": "2025-09-10T14:30:00Z", 
+    "scenario_name": "gemini_scenario_mediterranean_convoy",
+    "generated_at": "2025-09-10T15:10:55.986458",
     "total_ships": 3,
-    "duration_hours": 2.0
+    "format": "Multi-ship AIS/NMEA JSON format"
   },
-  "ships": [
-    {
-      "ship_name": "CELTIC_SEA_1",
-      "mmsi": 123456000,
-      "ship_type": "PASSENGER",
-      "route_type": "FERRY",
-      "positions": [...]
+  "ships": {
+    "123456000": {
+      "ship_info": {
+        "mmsi": 123456000,
+        "ship_name": "MEDITERRANEAN STAR_1",
+        "ship_type": "PASSENGER",
+        "total_reports": 73
+      },
+      "route_summary": {
+        "start_position": {
+          "latitude": 41.3851,
+          "longitude": 2.1734,
+          "timestamp": "2025-09-10T15:10:55.984509"
+        },
+        "end_position": {
+          "latitude": 42.1481,
+          "longitude": 3.4577,
+          "timestamp": "2025-09-10T21:10:55.984509"
+        }
+      },
+      "ais_data": [
+        {
+          "mmsi": 123456000,
+          "latitude": 41.3851,
+          "longitude": 2.1734,
+          "speed_knots": 12.0,
+          "course": 45.2,
+          "timestamp": "2025-09-10T15:10:55.984509",
+          "navigation_status": "UNDER_WAY_USING_ENGINE"
+        }
+      ]
     }
-  ]
+  }
 }
 ```
+
+**Output includes:**
+- 🗺️ **Interactive HTML maps** with ship tracks and info popups
+- 📄 **KML files** for Google Earth visualization
+- 📊 **NMEA sentences** for marine system integration
+- 🔢 **Structured JSON** for data analysis and processing
 
 ## 🏆 Hackathon Value
 
@@ -187,4 +274,20 @@ python start_server.py
 
 ---
 
-**🌊 Ready to generate some ships? Run `python ais_chat.py` and start chatting!** ⚓
+## 🚀 Getting Started
+
+1. **Clone & Setup**: `git clone` → `pip install -r requirements.txt`
+2. **Get Gemini Key**: [Free API key from Google AI Studio](https://aistudio.google.com/app/apikey)
+3. **Configure**: Create `.env` file with `GEMINI_KEY=your-api-key`
+4. **Start Chatting**: `python ais_chat.py`
+
+**🐳 Docker Alternative**: `docker-compose up` (includes FastAPI server on port 8000)
+
+**🌊 Ready to generate some ships? Run `python ais_chat.py` and start chatting with Gemini AI!** ⚓
+
+### 📈 Generated Data Usage
+- **Maritime Research**: Simulate ship traffic patterns for analysis
+- **System Testing**: Generate test data for maritime software
+- **Education**: Learn about AIS data format and ship behaviors  
+- **Visualization**: Create compelling maritime visualizations
+- **Machine Learning**: Training data for maritime AI models
