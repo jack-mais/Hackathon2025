@@ -589,25 +589,140 @@ class AISMCPServer:
         return f"{chosen_prefix}_{index + 1}"
     
     async def _list_available_ports(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """List available ports"""
+        """List all available ports and locations"""
         
-        # Simplified port list
-        ports = {
-            "SOUTHAMPTON": {"latitude": 50.8992, "longitude": -1.4044, "country": "UK"},
-            "PORTSMOUTH": {"latitude": 50.8058, "longitude": -1.0872, "country": "UK"},
-            "LIVERPOOL": {"latitude": 53.4084, "longitude": -2.9916, "country": "UK"},
-            "ROTTERDAM": {"latitude": 51.9225, "longitude": 4.4792, "country": "Netherlands"},
-            "HAMBURG": {"latitude": 53.5511, "longitude": 9.9937, "country": "Germany"},
-            "BARCELONA": {"latitude": 41.3851, "longitude": 2.1734, "country": "Spain"},
-            "MARSEILLE": {"latitude": 43.2965, "longitude": 5.3698, "country": "France"},
-            "NAPLES": {"latitude": 40.8518, "longitude": 14.2681, "country": "Italy"},
-            "SINGAPORE": {"latitude": 1.2966, "longitude": 103.7764, "country": "Singapore"},
-            "NEW_YORK": {"latitude": 40.7128, "longitude": -74.0060, "country": "USA"}
+        region_filter = params.get("region", "all").lower()
+        
+        # Comprehensive port database organized by region
+        all_ports = {
+            # UK & Ireland
+            "SOUTHAMPTON": {"latitude": 50.8992, "longitude": -1.4044, "country": "UK", "region": "UK_IRELAND"},
+            "PORTSMOUTH": {"latitude": 50.8058, "longitude": -1.0872, "country": "UK", "region": "UK_IRELAND"},
+            "LIVERPOOL": {"latitude": 53.4084, "longitude": -2.9916, "country": "UK", "region": "UK_IRELAND"},
+            "GLASGOW": {"latitude": 55.8642, "longitude": -4.2518, "country": "UK", "region": "UK_IRELAND"},
+            "BRISTOL": {"latitude": 51.4545, "longitude": -2.5879, "country": "UK", "region": "UK_IRELAND"},
+            "LONDON": {"latitude": 51.5074, "longitude": -0.1278, "country": "UK", "region": "UK_IRELAND"},
+            
+            # Northern Europe
+            "ROTTERDAM": {"latitude": 51.9225, "longitude": 4.4792, "country": "Netherlands", "region": "NORTHERN_EUROPE"},
+            "HAMBURG": {"latitude": 53.5511, "longitude": 9.9937, "country": "Germany", "region": "NORTHERN_EUROPE"},
+            "ANTWERP": {"latitude": 51.2194, "longitude": 4.4025, "country": "Belgium", "region": "NORTHERN_EUROPE"},
+            "DUNKIRK": {"latitude": 51.0344, "longitude": 2.3768, "country": "France", "region": "NORTHERN_EUROPE"},
+            "CALAIS": {"latitude": 50.9513, "longitude": 1.8587, "country": "France", "region": "NORTHERN_EUROPE"},
+            
+            # Mediterranean - Western
+            "BARCELONA": {"latitude": 41.3851, "longitude": 2.1734, "country": "Spain", "region": "MEDITERRANEAN_WEST"},
+            "VALENCIA": {"latitude": 39.4699, "longitude": -0.3763, "country": "Spain", "region": "MEDITERRANEAN_WEST"},
+            "BILBAO": {"latitude": 43.2627, "longitude": -2.9253, "country": "Spain", "region": "MEDITERRANEAN_WEST"},
+            "VIGO": {"latitude": 42.2406, "longitude": -8.7207, "country": "Spain", "region": "MEDITERRANEAN_WEST"},
+            "MALAGA": {"latitude": 36.7213, "longitude": -4.4214, "country": "Spain", "region": "MEDITERRANEAN_WEST"},
+            "ALGECIRAS": {"latitude": 36.1408, "longitude": -5.4565, "country": "Spain", "region": "MEDITERRANEAN_WEST"},
+            "MARSEILLE": {"latitude": 43.2965, "longitude": 5.3698, "country": "France", "region": "MEDITERRANEAN_WEST"},
+            "TOULON": {"latitude": 43.1242, "longitude": 5.9280, "country": "France", "region": "MEDITERRANEAN_WEST"},
+            "NICE": {"latitude": 43.7102, "longitude": 7.2620, "country": "France", "region": "MEDITERRANEAN_WEST"},
+            "LE_HAVRE": {"latitude": 49.4944, "longitude": 0.1079, "country": "France", "region": "MEDITERRANEAN_WEST"},
+            
+            # Mediterranean - Central
+            "GENOA": {"latitude": 44.4056, "longitude": 8.9463, "country": "Italy", "region": "MEDITERRANEAN_CENTRAL"},
+            "LIVORNO": {"latitude": 43.5481, "longitude": 10.3103, "country": "Italy", "region": "MEDITERRANEAN_CENTRAL"},
+            "CIVITAVECCHIA": {"latitude": 42.0936, "longitude": 11.7964, "country": "Italy", "region": "MEDITERRANEAN_CENTRAL"},
+            "NAPLES": {"latitude": 40.8518, "longitude": 14.2681, "country": "Italy", "region": "MEDITERRANEAN_CENTRAL"},
+            "BARI": {"latitude": 41.1177, "longitude": 16.8719, "country": "Italy", "region": "MEDITERRANEAN_CENTRAL"},
+            "PALERMO": {"latitude": 38.1157, "longitude": 13.3613, "country": "Italy", "region": "MEDITERRANEAN_CENTRAL"},
+            "CATANIA": {"latitude": 37.5079, "longitude": 15.0830, "country": "Italy", "region": "MEDITERRANEAN_CENTRAL"},
+            "MESSINA": {"latitude": 38.1938, "longitude": 15.5540, "country": "Italy", "region": "MEDITERRANEAN_CENTRAL"},
+            "VENICE": {"latitude": 45.4408, "longitude": 12.3155, "country": "Italy", "region": "MEDITERRANEAN_CENTRAL"},
+            
+            # Mediterranean - Eastern
+            "PIRAEUS": {"latitude": 37.9755, "longitude": 23.7348, "country": "Greece", "region": "MEDITERRANEAN_EAST"},
+            "ATHENS": {"latitude": 37.9755, "longitude": 23.7348, "country": "Greece", "region": "MEDITERRANEAN_EAST"},
+            "THESSALONIKI": {"latitude": 40.6401, "longitude": 22.9444, "country": "Greece", "region": "MEDITERRANEAN_EAST"},
+            "PATRAS": {"latitude": 38.2466, "longitude": 21.7346, "country": "Greece", "region": "MEDITERRANEAN_EAST"},
+            "HERAKLION": {"latitude": 35.3088, "longitude": 25.1634, "country": "Greece", "region": "MEDITERRANEAN_EAST"},
+            "RHODES": {"latitude": 36.4412, "longitude": 28.2225, "country": "Greece", "region": "MEDITERRANEAN_EAST"},
+            "ISTANBUL": {"latitude": 41.0082, "longitude": 28.9784, "country": "Turkey", "region": "MEDITERRANEAN_EAST"},
+            "IZMIR": {"latitude": 38.4192, "longitude": 27.1287, "country": "Turkey", "region": "MEDITERRANEAN_EAST"},
+            "ANTALYA": {"latitude": 36.8969, "longitude": 30.7133, "country": "Turkey", "region": "MEDITERRANEAN_EAST"},
+            "MERSIN": {"latitude": 36.8000, "longitude": 34.6333, "country": "Turkey", "region": "MEDITERRANEAN_EAST"},
+            
+            # Adriatic Sea
+            "SPLIT": {"latitude": 43.5081, "longitude": 16.4402, "country": "Croatia", "region": "ADRIATIC"},
+            "DUBROVNIK": {"latitude": 42.6507, "longitude": 18.0944, "country": "Croatia", "region": "ADRIATIC"},
+            "RIJEKA": {"latitude": 45.3271, "longitude": 14.4422, "country": "Croatia", "region": "ADRIATIC"},
+            
+            # North Africa
+            "ALEXANDRIA": {"latitude": 31.2001, "longitude": 29.9187, "country": "Egypt", "region": "NORTH_AFRICA"},
+            "TUNIS": {"latitude": 36.8065, "longitude": 10.1815, "country": "Tunisia", "region": "NORTH_AFRICA"},
+            "ALGIERS": {"latitude": 36.7538, "longitude": 3.0588, "country": "Algeria", "region": "NORTH_AFRICA"},
+            "CASABLANCA": {"latitude": 33.5731, "longitude": -7.5898, "country": "Morocco", "region": "NORTH_AFRICA"},
+            "TRIPOLI": {"latitude": 32.8872, "longitude": 13.1913, "country": "Libya", "region": "NORTH_AFRICA"},
+            "BENGHAZI": {"latitude": 32.1284, "longitude": 20.0817, "country": "Libya", "region": "NORTH_AFRICA"},
+            
+            # Middle East
+            "HAIFA": {"latitude": 32.7940, "longitude": 34.9896, "country": "Israel", "region": "MIDDLE_EAST"},
+            "TEL_AVIV": {"latitude": 32.0853, "longitude": 34.7818, "country": "Israel", "region": "MIDDLE_EAST"},
+            "BEIRUT": {"latitude": 33.8938, "longitude": 35.5018, "country": "Lebanon", "region": "MIDDLE_EAST"},
+            "LIMASSOL": {"latitude": 34.7071, "longitude": 33.0226, "country": "Cyprus", "region": "MIDDLE_EAST"},
+            
+            # Black Sea
+            "ODESSA": {"latitude": 46.4825, "longitude": 30.7233, "country": "Ukraine", "region": "BLACK_SEA"},
+            "SEVASTOPOL": {"latitude": 44.6167, "longitude": 33.5254, "country": "Ukraine", "region": "BLACK_SEA"},
+            "SOCHI": {"latitude": 43.5855, "longitude": 39.7231, "country": "Russia", "region": "BLACK_SEA"},
+            "CONSTANTA": {"latitude": 44.1598, "longitude": 28.6348, "country": "Romania", "region": "BLACK_SEA"},
+            "VARNA": {"latitude": 43.2047, "longitude": 27.9105, "country": "Bulgaria", "region": "BLACK_SEA"},
+            
+            # Asia Pacific
+            "SINGAPORE": {"latitude": 1.2966, "longitude": 103.7764, "country": "Singapore", "region": "ASIA_PACIFIC"},
+            "SHANGHAI": {"latitude": 31.2304, "longitude": 121.4737, "country": "China", "region": "ASIA_PACIFIC"},
+            "TOKYO": {"latitude": 35.6762, "longitude": 139.6503, "country": "Japan", "region": "ASIA_PACIFIC"},
+            
+            # Americas
+            "NEW_YORK": {"latitude": 40.7128, "longitude": -74.0060, "country": "USA", "region": "AMERICAS"},
+            
+            # Regional Areas
+            "NORTH_SEA": {"latitude": 55.0, "longitude": 3.0, "country": "International", "region": "REGIONAL"},
+            "ENGLISH_CHANNEL": {"latitude": 50.0, "longitude": -1.0, "country": "International", "region": "REGIONAL"},
+            "IRISH_SEA": {"latitude": 53.5, "longitude": -5.0, "country": "International", "region": "REGIONAL"},
+            "MEDITERRANEAN": {"latitude": 40.0, "longitude": 15.0, "country": "International", "region": "REGIONAL"},
+            "BALTIC_SEA": {"latitude": 57.0, "longitude": 18.0, "country": "International", "region": "REGIONAL"},
+            "BAY_OF_BISCAY": {"latitude": 44.0, "longitude": -4.0, "country": "International", "region": "REGIONAL"},
+            "AEGEAN_SEA": {"latitude": 38.0, "longitude": 25.0, "country": "International", "region": "REGIONAL"},
+            "IONIAN_SEA": {"latitude": 37.5, "longitude": 19.0, "country": "International", "region": "REGIONAL"},
+            "ADRIATIC_SEA": {"latitude": 43.0, "longitude": 15.0, "country": "International", "region": "REGIONAL"},
+            "BLACK_SEA": {"latitude": 43.0, "longitude": 34.0, "country": "International", "region": "REGIONAL"},
+            "RED_SEA": {"latitude": 22.0, "longitude": 38.0, "country": "International", "region": "REGIONAL"},
+            "PERSIAN_GULF": {"latitude": 26.0, "longitude": 52.0, "country": "International", "region": "REGIONAL"},
+            "GULF_OF_MEXICO": {"latitude": 25.0, "longitude": -90.0, "country": "International", "region": "REGIONAL"},
+            "CARIBBEAN_SEA": {"latitude": 15.0, "longitude": -75.0, "country": "International", "region": "REGIONAL"},
         }
+        
+        # Filter by region if specified
+        if region_filter != "all":
+            filtered_ports = {}
+            for port_name, port_info in all_ports.items():
+                if region_filter in port_info["region"].lower():
+                    filtered_ports[port_name] = port_info
+            ports = filtered_ports
+        else:
+            ports = all_ports
+        
+        # Group by region for better organization
+        regions = {}
+        for port_name, port_info in ports.items():
+            region = port_info["region"]
+            if region not in regions:
+                regions[region] = []
+            regions[region].append({
+                "name": port_name,
+                "latitude": port_info["latitude"],
+                "longitude": port_info["longitude"],
+                "country": port_info["country"]
+            })
         
         return {
             "success": True,
             "ports": ports,
+            "regions": regions,
             "total_ports": len(ports),
             "message": f"Available major ports: {', '.join(ports.keys())}"
         }
