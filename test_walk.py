@@ -8,7 +8,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(__file__))
 
-from src.generators.multi_ship_generator import MultiShipGenerator
+from src.generators.ais_generator import AISGenerator
 from src.generators.nmea_formatter import NMEAFormatter
 from src.core.file_output import FileOutputManager
 import json
@@ -33,7 +33,7 @@ def test_multi_ship_irish_sea():
     print("-" * 50)
     
     # Create multi-ship generator and file manager
-    generator = MultiShipGenerator()
+    generator = AISGenerator()
     formatter = NMEAFormatter()
     file_manager = FileOutputManager()
     

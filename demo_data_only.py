@@ -25,10 +25,10 @@ def generate_demo_data():
     ))
     
     try:
-        from src.generators.multi_ship_generator import MultiShipGenerator
+        from src.generators.ais_generator import AISGenerator
         
-        generator = MultiShipGenerator()
-        console.print("✅ MultiShipGenerator initialized")
+        generator = AISGenerator()
+        console.print("✅ AISGenerator initialized")
         
         # Check available methods
         methods = [method for method in dir(generator) if not method.startswith('_')]

@@ -1,249 +1,95 @@
 """
-MCP Server for AIS Ship Generation
-Exposes ship generation capabilities via Model Context Protocol
+Simplified MCP Server for AIS Ship Generation
+Single unified tool that handles all generation requests
 """
 
 import json
 import asyncio
 import random
+import re
+import math
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 
-from ..generators.multi_ship_generator import MultiShipGenerator, IrishSeaRoutes
-from ..core.models import ShipType, Position, Route
+from ..generators.ais_generator import AISGenerator, Position, Route, ShipType, RouteType, RealisticShipMovement
 from ..core.file_output import FileOutputManager
 
 
 class AISMCPServer:
-    """MCP Server exposing AIS generation tools"""
+    """Simplified MCP Server with one unified generation tool"""
     
     def __init__(self):
-        self.generator = MultiShipGenerator()
+        self.generator = AISGenerator()
         self.file_manager = FileOutputManager()
         self.available_tools = self._define_tools()
     
     def _define_tools(self) -> Dict[str, Dict[str, Any]]:
-        """Define MCP tools for LLM to use"""
+        """Define simplified MCP tools - one unified generation tool"""
         return {
-            "generate_irish_sea_scenario": {
-                "description": "Generate multiple ships in the Irish Sea with realistic routes",
+            "generate_ais_data": {
+                "description": "Generate AIS ship tracking data for any location worldwide",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "num_ships": {
                             "type": "integer",
-                            "description": "Number of ships to generate (1-10)",
+                            "description": "Number of ships to generate (1-20)",
                             "minimum": 1,
-                            "maximum": 10
+                            "maximum": 20,
+                            "default": 3
                         },
-                        "duration_hours": {
-                            "type": "number",
-                            "description": "How long to simulate movement in hours",
-                            "default": 2.0
-                        },
-                        "report_interval_minutes": {
-                            "type": "integer", 
-                            "description": "Interval between AIS reports in minutes",
-                            "default": 5
-                        },
-                        "scenario_name": {
+                        "location": {
                             "type": "string",
-                            "description": "Name for the generated scenario",
-                            "default": "irish_sea_scenario"
-                        }
-                    },
-                    "required": ["num_ships"]
-                }
-            },
-            
-            "generate_maritime_scenario": {
-                "description": "Generate multiple ships in any maritime region worldwide with realistic routes",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "num_ships": {
-                            "type": "integer",
-                            "description": "Number of ships to generate (1-10)",
-                            "minimum": 1,
-                            "maximum": 10
+                            "description": "Location description (e.g. 'Southampton', 'off coast of Sicily', 'North Sea', coordinates)",
+                            "default": "Mediterranean Sea"
                         },
-                        "region": {
-                            "type": "string",
-                            "description": "Maritime region (mediterranean, north_sea, nordic, asia, north_america, europe, irish_sea)",
-                            "default": "mediterranean",
-                            "enum": ["mediterranean", "north_sea", "nordic", "asia", "north_america", "europe", "irish_sea"]
-                        },
-                        "duration_hours": {
-                            "type": "number",
-                            "description": "How long to simulate movement in hours",
-                            "default": 2.0
-                        },
-                        "report_interval_minutes": {
-                            "type": "integer", 
-                            "description": "Interval between AIS reports in minutes",
-                            "default": 5
-                        },
-                        "scenario_name": {
-                            "type": "string",
-                            "description": "Name for the generated scenario",
-                            "default": "maritime_scenario"
-                        }
-                    },
-                    "required": ["num_ships"]
-                }
-            },
-            
-            "generate_custom_ships": {
-                "description": "Generate ships with specific types and routes",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "ships": {
+                        "ship_types": {
                             "type": "array",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "ship_type": {
-                                        "type": "string",
-                                        "enum": ["PASSENGER", "CARGO", "FISHING", "PILOT_VESSEL", "HIGH_SPEED_CRAFT"],
-                                        "description": "Type of ship"
-                                    },
-                                    "ship_name": {
-                                        "type": "string",
-                                        "description": "Name of the ship"
-                                    },
-                                    "start_port": {
-                                        "type": "string",
-                                        "enum": ["DUBLIN", "HOLYHEAD", "LIVERPOOL", "BELFAST", "CORK", "SWANSEA", "ISLE_OF_MAN", "CARDIFF"],
-                                        "description": "Starting port"
-                                    },
-                                    "end_port": {
-                                        "type": "string", 
-                                        "enum": ["DUBLIN", "HOLYHEAD", "LIVERPOOL", "BELFAST", "CORK", "SWANSEA", "ISLE_OF_MAN", "CARDIFF"],
-                                        "description": "Destination port"
-                                    }
-                                },
-                                "required": ["ship_type", "start_port", "end_port"]
-                            },
-                            "description": "List of ships to generate"
+                            "items": {"type": "string"},
+                            "description": "Optional ship types: CARGO, PASSENGER, FISHING, PILOT_VESSEL, HIGH_SPEED_CRAFT",
+                            "default": []
+                        },
+                        "destination": {
+                            "type": "string", 
+                            "description": "Optional destination for point-to-point routes",
+                            "default": ""
                         },
                         "duration_hours": {
                             "type": "number",
                             "description": "Simulation duration in hours",
-                            "default": 2.0
+                            "default": 3.0,
+                            "minimum": 0.5,
+                            "maximum": 48.0
                         },
                         "scenario_name": {
                             "type": "string",
                             "description": "Name for the scenario",
-                            "default": "custom_scenario"
+                            "default": "ais_scenario"
                         }
                     },
-                    "required": ["ships"]
+                    "required": ["num_ships", "location"]
                 }
             },
             
             "list_available_ports": {
-                "description": "List all available ports worldwide or in a specific region",
+                "description": "List major ports worldwide",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "region": {
                             "type": "string",
-                            "description": "Maritime region to filter by (optional, returns all if not specified)",
-                            "enum": ["mediterranean", "north_sea", "nordic", "asia", "north_america", "europe", "irish_sea", "all"]
+                            "description": "Optional region filter",
+                            "default": "all"
                         }
                     }
                 }
             },
             
             "get_ship_types": {
-                "description": "Get information about available ship types",
+                "description": "Get available ship types and their characteristics",
                 "parameters": {
-                    "type": "object", 
+                    "type": "object",
                     "properties": {}
-                }
-            },
-            
-            "generate_coordinate_scenario": {
-                "description": "Generate ships using specific coordinates",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "coordinates": {
-                            "type": "array",
-                            "items": {
-                                "type": "array",
-                                "items": {"type": "number"},
-                                "minItems": 2,
-                                "maxItems": 2
-                            },
-                            "description": "Array of [latitude, longitude] coordinate pairs"
-                        },
-                        "num_ships": {
-                            "type": "integer",
-                            "description": "Number of ships to generate",
-                            "minimum": 1,
-                            "maximum": 20,
-                            "default": 3
-                        },
-                        "duration_hours": {
-                            "type": "number",
-                            "description": "Simulation duration in hours",
-                            "default": 2.0
-                        },
-                        "scenario_name": {
-                            "type": "string",
-                            "description": "Name for the scenario",
-                            "default": "coordinate_scenario"
-                        }
-                    },
-                    "required": ["coordinates"]
-                }
-            },
-            
-            "generate_specialized_scenario": {
-                "description": "Generate specialized maritime scenarios (convoy, rescue, cruise, etc.)",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "scenario_type": {
-                            "type": "string",
-                            "enum": ["convoy", "rescue_operation", "cruise_tourism", "military_exercise", "fishing_fleet", "port_operations", "storm_avoidance", "oil_platform", "racing_regatta"],
-                            "description": "Type of specialized scenario"
-                        },
-                        "num_ships": {
-                            "type": "integer",
-                            "description": "Number of ships in the scenario",
-                            "minimum": 1,
-                            "maximum": 30,
-                            "default": 5
-                        },
-                        "region": {
-                            "type": "string",
-                            "description": "Maritime region for the scenario",
-                            "default": "mediterranean"
-                        },
-                        "duration_hours": {
-                            "type": "number",
-                            "description": "Simulation duration in hours",
-                            "default": 3.0
-                        },
-                        "special_parameters": {
-                            "type": "object",
-                            "properties": {
-                                "formation_spacing": {"type": "number", "description": "Spacing between ships in nautical miles"},
-                                "emergency_urgency": {"type": "string", "enum": ["low", "medium", "high"]},
-                                "weather_severity": {"type": "string", "enum": ["mild", "moderate", "severe"]},
-                                "operation_complexity": {"type": "string", "enum": ["simple", "complex", "expert"]}
-                            }
-                        },
-                        "scenario_name": {
-                            "type": "string",
-                            "description": "Custom name for the scenario",
-                            "default": "specialized_scenario"
-                        }
-                    },
-                    "required": ["scenario_type"]
                 }
             }
         }
@@ -259,16 +105,8 @@ class AISMCPServer:
             }
         
         try:
-            if tool_name == "generate_irish_sea_scenario":
-                return await self._generate_irish_sea_scenario(parameters)
-            elif tool_name == "generate_maritime_scenario":
-                return await self._generate_maritime_scenario(parameters)
-            elif tool_name == "generate_custom_ships":
-                return await self._generate_custom_ships(parameters)
-            elif tool_name == "generate_coordinate_scenario":
-                return await self._generate_coordinate_scenario(parameters)
-            elif tool_name == "generate_specialized_scenario":
-                return await self._generate_specialized_scenario(parameters)
+            if tool_name == "generate_ais_data":
+                return await self._generate_ais_data(parameters)
             elif tool_name == "list_available_ports":
                 return await self._list_available_ports(parameters)
             elif tool_name == "get_ship_types":
@@ -282,341 +120,90 @@ class AISMCPServer:
                 "error": f"Error calling {tool_name}: {str(e)}"
             }
     
-    async def _generate_irish_sea_scenario(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate Irish Sea scenario with multiple ships"""
+    async def _generate_ais_data(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate AIS data based on flexible location parameters"""
         
         num_ships = params.get("num_ships", 3)
-        duration_hours = params.get("duration_hours", 2.0)
-        report_interval_minutes = params.get("report_interval_minutes", 5)
-        scenario_name = params.get("scenario_name", "irish_sea_scenario")
+        location = params.get("location", "Mediterranean Sea")
+        ship_types = params.get("ship_types", [])
+        destination = params.get("destination", "")
+        duration_hours = params.get("duration_hours", 3.0)
+        scenario_name = params.get("scenario_name", "ais_scenario")
         
-        # Generate ships
-        ships = self.generator.generate_irish_sea_scenario(num_ships)
-        
-        return await self._process_ship_generation(ships, duration_hours, report_interval_minutes, scenario_name, "irish_sea")
-    
-    async def _generate_maritime_scenario(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate maritime scenario in any region worldwide"""
-        
-        num_ships = params.get("num_ships", 3)
-        region = params.get("region", "mediterranean")
-        duration_hours = params.get("duration_hours", 2.0)
-        report_interval_minutes = params.get("report_interval_minutes", 5)
-        scenario_name = params.get("scenario_name", f"{region}_scenario")
-        location_hint = params.get("location_hint", "")  # Get location hint for intelligent coordinates
-        
-        # Generate ships for the specified region with location hint
-        ships = self.generator.generate_maritime_scenario(num_ships, region, location_hint)
-        
-        return await self._process_ship_generation(ships, duration_hours, report_interval_minutes, scenario_name, region)
-    
-    async def _process_ship_generation(self, ships: List, duration_hours: float, report_interval_minutes: int, scenario_name: str, region: str) -> Dict[str, Any]:
-        """Common processing for ship generation"""
-        
-        # Generate movement data
-        all_ship_data = {}
-        ship_summaries = []
-        
-        for ship in ships:
-            # Generate movement
-            report_interval_seconds = report_interval_minutes * 60
-            states = list(ship.generate_movement(duration_hours, report_interval_seconds))
-            all_ship_data[ship.mmsi] = states
-            
-            # Create summary
-            ship_summaries.append({
-                "mmsi": ship.mmsi,
-                "name": ship.ship_name,
-                "type": ship.ship_type.name,
-                "route_type": ship.route_type.value,
-                "speed_knots": ship.route.speed_knots,
-                "distance_nm": ship.total_distance_nm,
-                "estimated_time_hours": ship.total_time_hours,
-                "total_reports": len(states)
-            })
-        
-        # Save to file
-        saved_files = self.file_manager.save_multi_ship_data(
-            all_ship_data, f"{scenario_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
-        )
-        
-        # Create enhanced message based on what was generated
-        files_info = []
-        if "json" in saved_files:
-            files_info.append(f"📁 JSON data: {saved_files['json']}")
-        if "map" in saved_files:
-            files_info.append(f"🗺️ Interactive map: {saved_files['map']}")
-        
-        files_text = "\n".join(files_info) if files_info else "Files saved"
-        
-        return {
-            "success": True,
-            "scenario_name": scenario_name,
-            "region": region,
-            "ships_generated": len(ships),
-            "duration_hours": duration_hours,
-            "report_interval_minutes": report_interval_minutes,
-            "ships": ship_summaries,
-            "saved_files": saved_files,
-            "message": f"✅ Generated {len(ships)} ships in {region} scenario!\n\n{files_text}\n\n🎯 Both JSON data and interactive HTML map have been created automatically."
-        }
-    
-    async def _generate_custom_ships(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate custom ships with specific configurations"""
-        
-        ships_config = params.get("ships", [])
-        duration_hours = params.get("duration_hours", 2.0)
-        scenario_name = params.get("scenario_name", "custom_scenario")
-        
-        if not ships_config:
-            return {"success": False, "error": "No ships specified"}
-        
-        # Port positions mapping
-        port_positions = {
-            "DUBLIN": IrishSeaRoutes.DUBLIN,
-            "HOLYHEAD": IrishSeaRoutes.HOLYHEAD,
-            "LIVERPOOL": IrishSeaRoutes.LIVERPOOL,
-            "BELFAST": IrishSeaRoutes.BELFAST,
-            "CORK": IrishSeaRoutes.CORK,
-            "SWANSEA": IrishSeaRoutes.SWANSEA,
-            "ISLE_OF_MAN": IrishSeaRoutes.ISLE_OF_MAN,
-            "CARDIFF": IrishSeaRoutes.CARDIFF
-        }
-        
-        # Ship type mapping
-        ship_type_mapping = {
-            "PASSENGER": ShipType.PASSENGER,
-            "CARGO": ShipType.CARGO,
-            "FISHING": ShipType.FISHING,
-            "PILOT_VESSEL": ShipType.PILOT_VESSEL,
-            "HIGH_SPEED_CRAFT": ShipType.HIGH_SPEED_CRAFT
-        }
-        
-        generated_ships = []
-        all_ship_data = {}
-        ship_summaries = []
-        
-        for i, ship_config in enumerate(ships_config):
-            # Get configuration
-            ship_type_str = ship_config.get("ship_type", "CARGO")
-            ship_name = ship_config.get("ship_name", f"CUSTOM_SHIP_{i+1}")
-            start_port = ship_config.get("start_port", "DUBLIN")
-            end_port = ship_config.get("end_port", "HOLYHEAD")
-            
-            # Convert to objects
-            ship_type = ship_type_mapping.get(ship_type_str, ShipType.CARGO)
-            start_pos = port_positions.get(start_port, IrishSeaRoutes.DUBLIN)
-            end_pos = port_positions.get(end_port, IrishSeaRoutes.HOLYHEAD)
-            
-            # Create route and ship
-            route = Route(start_pos, end_pos, 12.0)  # Base speed
-            mmsi = self.generator.ship_counter + i
-            
-            from ..generators.multi_ship_generator import RealisticShipMovement, RouteType
-            # Determine route type from ship type
-            route_type = RouteType.FERRY if ship_type == ShipType.PASSENGER else RouteType.CARGO
-            
-            ship = RealisticShipMovement(route, mmsi, ship_name, ship_type, route_type)
-            generated_ships.append(ship)
-            
-            # Generate movement data
-            states = list(ship.generate_movement(duration_hours, 300))  # 5 minute intervals
-            all_ship_data[ship.mmsi] = states
-            
-            ship_summaries.append({
-                "mmsi": ship.mmsi,
-                "name": ship.ship_name,
-                "type": ship.ship_type.name,
-                "start_port": start_port,
-                "end_port": end_port,
-                "speed_knots": ship.route.speed_knots,
-                "distance_nm": ship.total_distance_nm,
-                "estimated_time_hours": ship.total_time_hours,
-                "total_reports": len(states)
-            })
-        
-        # Save to file
-        saved_files = self.file_manager.save_multi_ship_data(
-            all_ship_data, f"{scenario_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
-        )
-        
-        # Create enhanced message based on what was generated
-        files_info = []
-        if "json" in saved_files:
-            files_info.append(f"📁 JSON data: {saved_files['json']}")
-        if "map" in saved_files:
-            files_info.append(f"🗺️ Interactive map: {saved_files['map']}")
-        
-        files_text = "\n".join(files_info) if files_info else "Files saved"
-        
-        return {
-            "success": True,
-            "scenario_name": scenario_name,
-            "ships_generated": len(generated_ships),
-            "duration_hours": duration_hours,
-            "ships": ship_summaries,
-            "saved_files": saved_files,
-            "message": f"✅ Generated {len(generated_ships)} custom ships!\n\n{files_text}\n\n🎯 Both JSON data and interactive HTML map have been created automatically."
-        }
-    
-    async def _list_available_ports(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """List available ports worldwide or in a specific region"""
-        
-        region = params.get("region", "all")
-        
-        # Get ports from the worldwide routes
-        from ..generators.multi_ship_generator import WorldwideRoutes
-        
-        if region == "all" or region is None:
-            # Return all ports
-            all_ports = WorldwideRoutes.get_all_ports()
-        else:
-            # Return ports for specific region
-            all_ports = WorldwideRoutes.get_ports_by_region(region)
-        
-        # Convert to response format with additional metadata
-        ports = {}
-        for name, position in all_ports.items():
-            # Add region/country info based on port location
-            country_info = self._get_port_country_info(name)
-            ports[name] = {
-                "latitude": position.latitude,
-                "longitude": position.longitude,
-                **country_info
-            }
-        
-        region_text = f"in the {region} region" if region != "all" else "worldwide"
-        
-        return {
-            "success": True,
-            "region": region,
-            "ports": ports,
-            "total_ports": len(ports),
-            "message": f"Available ports {region_text}: {', '.join(ports.keys())}"
-        }
-    
-    def _get_port_country_info(self, port_name: str) -> Dict[str, str]:
-        """Get country/region info for a port"""
-        port_countries = {
-            # Irish Sea
-            "DUBLIN": {"country": "Ireland", "region": "Irish Sea"},
-            "CORK": {"country": "Ireland", "region": "Irish Sea"},
-            "LIVERPOOL": {"country": "England", "region": "Irish Sea"},
-            "HOLYHEAD": {"country": "Wales", "region": "Irish Sea"},
-            "BELFAST": {"country": "Northern Ireland", "region": "Irish Sea"},
-            "SWANSEA": {"country": "Wales", "region": "Irish Sea"},
-            "CARDIFF": {"country": "Wales", "region": "Irish Sea"},
-            "ISLE_OF_MAN": {"country": "Isle of Man", "region": "Irish Sea"},
-            
-            # European
-            "ROTTERDAM": {"country": "Netherlands", "region": "North Sea"},
-            "HAMBURG": {"country": "Germany", "region": "North Sea"},
-            "ANTWERP": {"country": "Belgium", "region": "North Sea"},
-            "LE_HAVRE": {"country": "France", "region": "English Channel"},
-            "BARCELONA": {"country": "Spain", "region": "Mediterranean"},
-            "MARSEILLE": {"country": "France", "region": "Mediterranean"},
-            "NAPLES": {"country": "Italy", "region": "Mediterranean"},
-            "VENICE": {"country": "Italy", "region": "Mediterranean"},
-            "ATHENS": {"country": "Greece", "region": "Mediterranean"},
-            "ISTANBUL": {"country": "Turkey", "region": "Mediterranean"},
-            
-            # Nordic/Baltic
-            "COPENHAGEN": {"country": "Denmark", "region": "Baltic Sea"},
-            "STOCKHOLM": {"country": "Sweden", "region": "Baltic Sea"},
-            "OSLO": {"country": "Norway", "region": "North Sea"},
-            "HELSINKI": {"country": "Finland", "region": "Baltic Sea"},
-            "GDANSK": {"country": "Poland", "region": "Baltic Sea"},
-            
-            # Asian
-            "SINGAPORE": {"country": "Singapore", "region": "Southeast Asia"},
-            "SHANGHAI": {"country": "China", "region": "East Asia"},
-            "HONG_KONG": {"country": "Hong Kong", "region": "East Asia"},
-            "TOKYO": {"country": "Japan", "region": "East Asia"},
-            "BUSAN": {"country": "South Korea", "region": "East Asia"},
-            "MUMBAI": {"country": "India", "region": "Indian Ocean"},
-            "DUBAI": {"country": "UAE", "region": "Persian Gulf"},
-            
-            # North American
-            "NEW_YORK": {"country": "USA", "region": "North Atlantic"},
-            "LOS_ANGELES": {"country": "USA", "region": "North Pacific"},
-            "MIAMI": {"country": "USA", "region": "Caribbean"},
-            "VANCOUVER": {"country": "Canada", "region": "North Pacific"},
-            "MONTREAL": {"country": "Canada", "region": "St. Lawrence"}
-        }
-        
-        return port_countries.get(port_name, {"country": "Unknown", "region": "Unknown"})
-    
-    async def _generate_coordinate_scenario(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate ships using specific coordinates"""
-        
-        coordinates = params.get("coordinates", [])
-        num_ships = params.get("num_ships", 3)
-        duration_hours = params.get("duration_hours", 2.0)
-        scenario_name = params.get("scenario_name", "coordinate_scenario")
-        
-        if not coordinates or len(coordinates) < 2:
-            return {
-                "success": False,
-                "error": "At least 2 coordinate pairs required for coordinate-based generation"
-            }
+        print(f"🗺️ Generating {num_ships} ships at '{location}'")
+        if destination:
+            print(f"🎯 Destination: '{destination}'")
         
         try:
-            # Create custom ships using coordinates
-            from ..generators.multi_ship_generator import MultiShipGenerator, Route, Position
-            from ..core.models import ShipType
+            # Parse the location to get coordinates
+            start_coords = self._parse_location(location)
+            end_coords = None
             
-            ships_data = []
-            ship_types = [ShipType.PASSENGER, ShipType.CARGO, ShipType.FISHING, ShipType.PILOT_VESSEL]
+            if destination:
+                end_coords = self._parse_location(destination)
+            
+            # Generate ships
+            ships = []
+            ship_summaries = []
+            all_ship_data = {}
             
             for i in range(num_ships):
-                # Use coordinate pairs for start/end positions
-                coord_idx = i % (len(coordinates) - 1)
-                start_coord = coordinates[coord_idx]
-                end_coord = coordinates[coord_idx + 1]
+                # Determine ship type
+                if ship_types and i < len(ship_types):
+                    ship_type_str = ship_types[i].upper()
+                elif ship_types:
+                    ship_type_str = random.choice(ship_types).upper()
+                else:
+                    # Default ship type based on location context
+                    ship_type_str = self._infer_ship_type(location)
                 
-                start_pos = Position(latitude=start_coord[0], longitude=start_coord[1])
-                end_pos = Position(latitude=end_coord[0], longitude=end_coord[1])
+                ship_type = self._str_to_ship_type(ship_type_str)
                 
                 # Create route
-                route = Route(start_pos, end_pos, 12.0)
+                if end_coords:
+                    # Point-to-point route
+                    route_start = start_coords
+                    route_end = end_coords
+                else:
+                    # Generate local movement area around the location
+                    route_start = start_coords
+                    route_end = self._generate_nearby_position(start_coords, ship_type)
+                
+                # Create route with appropriate speed
+                speed = self._get_ship_speed(ship_type)
+                route = Route(route_start, route_end, speed)
                 
                 # Create ship
-                ship_type = ship_types[i % len(ship_types)]
                 mmsi = 123456000 + i
-                ship_name = f"COORD_SHIP_{i+1}_{random.randint(100, 999)}"
+                ship_name = self._generate_ship_name(ship_type, i, location)
                 
-                from ..generators.multi_ship_generator import RealisticShipMovement, RouteType
-                route_type = RouteType.FERRY if ship_type == ShipType.PASSENGER else RouteType.CARGO
+                route_type = self._get_route_type(ship_type)
                 
                 ship = RealisticShipMovement(route, mmsi, ship_name, ship_type, route_type)
-                ships_data.append(ship)
-            
-            # Generate movement data and save
-            all_ship_data = {}
-            ship_summaries = []
-            
-            for ship in ships_data:
+                ships.append(ship)
+                
+                # Generate movement data
                 report_interval_seconds = 5 * 60  # 5 minutes
                 states = list(ship.generate_movement(duration_hours, report_interval_seconds))
                 all_ship_data[ship.mmsi] = states
                 
+                # Create summary
                 ship_summaries.append({
                     "mmsi": ship.mmsi,
                     "name": ship.ship_name,
-                    "type": ship.ship_type.name,
-                    "route_type": ship.route_type.value,
+                    "type": ship_type.name,
                     "speed_knots": ship.route.speed_knots,
                     "distance_nm": ship.total_distance_nm,
                     "estimated_time_hours": ship.total_time_hours,
                     "total_reports": len(states)
                 })
             
-            # Save files
+            # Save to file
             saved_files = self.file_manager.save_multi_ship_data(
                 all_ship_data, f"{scenario_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
             )
             
-            # Create enhanced message
+            # Create response message
             files_info = []
             if "json" in saved_files:
                 files_info.append(f"📁 JSON data: {saved_files['json']}")
@@ -628,189 +215,270 @@ class AISMCPServer:
             return {
                 "success": True,
                 "scenario_name": scenario_name,
-                "scenario_type": "coordinate_based",
-                "ships_generated": len(ships_data),
+                "location": location,
+                "destination": destination or "Local area",
+                "ships_generated": len(ships),
                 "duration_hours": duration_hours,
-                "coordinates_used": len(coordinates),
                 "ships": ship_summaries,
                 "saved_files": saved_files,
-                "message": f"✅ Generated {len(ships_data)} ships using {len(coordinates)} coordinates!\n\n{files_text}\n\n🎯 Ships follow routes between specified coordinate points with realistic AIS tracking data."
+                "message": f"✅ Generated {len(ships)} ships near {location}!\n\n{files_text}\n\n🎯 AIS tracking data created with realistic ship movements."
             }
             
         except Exception as e:
             return {
                 "success": False,
-                "error": f"Error generating coordinate scenario: {str(e)}"
+                "error": f"Failed to generate AIS data: {str(e)}"
             }
     
-    async def _generate_specialized_scenario(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate specialized maritime scenarios"""
+    def _parse_location(self, location_str: str) -> Position:
+        """Parse location string to coordinates"""
+        location_lower = location_str.lower().strip()
         
-        scenario_type = params.get("scenario_type", "convoy")
-        num_ships = params.get("num_ships", 5)
-        region = params.get("region", "mediterranean")
-        duration_hours = params.get("duration_hours", 3.0)
-        special_params = params.get("special_parameters", {})
-        scenario_name = params.get("scenario_name", f"{scenario_type}_scenario")
-        
-        try:
-            # Generate ships based on scenario type
-            if scenario_type == "convoy":
-                ships = await self._generate_convoy_scenario(num_ships, region, special_params)
-            elif scenario_type == "rescue_operation":
-                ships = await self._generate_rescue_scenario(num_ships, region, special_params)
-            elif scenario_type == "cruise_tourism":
-                ships = await self._generate_cruise_scenario(num_ships, region, special_params)
-            elif scenario_type == "military_exercise":
-                ships = await self._generate_military_scenario(num_ships, region, special_params)
-            elif scenario_type == "fishing_fleet":
-                ships = await self._generate_fishing_fleet_scenario(num_ships, region, special_params)
-            elif scenario_type == "port_operations":
-                ships = await self._generate_port_operations_scenario(num_ships, region, special_params)
-            else:
-                # Fallback to regional generation
-                ships = self.generator.generate_maritime_scenario(num_ships, region)
+        # Check for known ports first
+        port_mapping = {
+            # UK Ports
+            'southampton': Position(latitude=50.8992, longitude=-1.4044),
+            'portsmouth': Position(latitude=50.8058, longitude=-1.0872),
+            'london': Position(latitude=51.5074, longitude=-0.1278),
+            'liverpool': Position(latitude=53.4084, longitude=-2.9916),
+            'glasgow': Position(latitude=55.8642, longitude=-4.2518),
+            'bristol': Position(latitude=51.4545, longitude=-2.5879),
             
-            # Process the generated ships
-            return await self._process_ship_generation(ships, duration_hours, 5, scenario_name, region)
+            # European Ports
+            'rotterdam': Position(latitude=51.9225, longitude=4.4792),
+            'hamburg': Position(latitude=53.5511, longitude=9.9937),
+            'antwerp': Position(latitude=51.2194, longitude=4.4025),
+            'marseille': Position(latitude=43.2965, longitude=5.3698),
+            'barcelona': Position(latitude=41.3851, longitude=2.1734),
+            'naples': Position(latitude=40.8518, longitude=14.2681),
+            'venice': Position(latitude=45.4408, longitude=12.3155),
             
-        except Exception as e:
-            return {
-                "success": False,
-                "error": f"Error generating {scenario_type} scenario: {str(e)}"
-            }
+            # Other major ports
+            'new york': Position(latitude=40.7128, longitude=-74.0060),
+            'singapore': Position(latitude=1.2966, longitude=103.7764),
+            'shanghai': Position(latitude=31.2304, longitude=121.4737),
+            'tokyo': Position(latitude=35.6762, longitude=139.6503),
+        }
+        
+        # Check exact port matches
+        for port_name, coords in port_mapping.items():
+            if port_name in location_lower:
+                return coords
+        
+        # Check for regional/area descriptions
+        area_mapping = {
+            # Seas and regions
+            'north sea': Position(latitude=55.0, longitude=3.0),
+            'english channel': Position(latitude=50.0, longitude=-1.0),
+            'irish sea': Position(latitude=53.5, longitude=-5.0),
+            'mediterranean': Position(latitude=40.0, longitude=15.0),
+            'mediterranean sea': Position(latitude=40.0, longitude=15.0),
+            'baltic sea': Position(latitude=57.0, longitude=18.0),
+            'bay of biscay': Position(latitude=44.0, longitude=-4.0),
+            
+            # Coastal areas
+            'off southampton': Position(latitude=50.7, longitude=-1.2),
+            'south of southampton': Position(latitude=50.7, longitude=-1.4),
+            'outside southampton': Position(latitude=50.7, longitude=-1.2),
+            'off portsmouth': Position(latitude=50.6, longitude=-0.9),
+            'coast of sicily': Position(latitude=37.5, longitude=13.8),
+            'off sicily': Position(latitude=37.0, longitude=13.0),
+            'coast of spain': Position(latitude=41.2, longitude=2.0),
+            'coast of france': Position(latitude=43.5, longitude=7.0),
+            'norwegian coast': Position(latitude=58.0, longitude=5.0),
+            'dutch coast': Position(latitude=52.5, longitude=4.0),
+            
+            # Countries (use major port)
+            'uk': Position(latitude=51.5, longitude=-1.0),
+            'england': Position(latitude=51.5, longitude=-1.0),
+            'france': Position(latitude=43.3, longitude=5.4),
+            'spain': Position(latitude=41.4, longitude=2.2),
+            'italy': Position(latitude=40.9, longitude=14.3),
+            'germany': Position(latitude=53.6, longitude=10.0),
+            'netherlands': Position(latitude=51.9, longitude=4.5),
+            'norway': Position(latitude=58.0, longitude=5.0),
+        }
+        
+        for area_name, coords in area_mapping.items():
+            if area_name in location_lower:
+                return coords
+        
+        # If no match found, try to extract coordinates from text
+        coord_match = re.search(r'(\d+\.?\d*)[°\s]*[NnSs][,\s]+(\d+\.?\d*)[°\s]*[EeWw]', location_str)
+        if coord_match:
+            lat = float(coord_match.group(1))
+            lon = float(coord_match.group(2))
+            # Handle N/S and E/W
+            if 's' in location_lower:
+                lat = -lat
+            if 'w' in location_lower:
+                lon = -lon
+            return Position(latitude=lat, longitude=lon)
+        
+        # Default fallback - generic ocean position
+        print(f"⚠️ Unknown location '{location_str}', using default coordinates")
+        return Position(latitude=50.0, longitude=0.0)  # English Channel
     
-    async def _generate_convoy_scenario(self, num_ships: int, region: str, params: Dict[str, Any]) -> List:
-        """Generate convoy formation scenario"""
-        from ..core.models import ShipType
+    def _generate_nearby_position(self, start_pos: Position, ship_type: ShipType) -> Position:
+        """Generate a nearby position for local area movement"""
         
-        # Create mixed convoy: 1 escort + cargo ships
-        ships = []
-        spacing = params.get("formation_spacing", 0.5)  # nautical miles
+        # Distance based on ship type
+        if ship_type == ShipType.FISHING:
+            max_distance = 0.3  # ~20 nautical miles
+        elif ship_type == ShipType.PILOT_VESSEL:
+            max_distance = 0.2  # ~15 nautical miles  
+        else:
+            max_distance = 0.5  # ~35 nautical miles
         
-        # Lead escort vessel
-        escort_ships = self.generator.generate_maritime_scenario(1, region)
-        if escort_ships:
-            # Override ship type to pilot vessel (escort)
-            escort_ships[0].ship_type = ShipType.PILOT_VESSEL
-            ships.append(escort_ships[0])
+        # Random direction
+        angle = random.uniform(0, 2 * math.pi)
+        distance = random.uniform(0.1, max_distance)
         
-        # Cargo convoy
-        cargo_ships = self.generator.generate_maritime_scenario(num_ships - 1, region)
-        for ship in cargo_ships:
-            ship.ship_type = ShipType.CARGO
-            ships.append(ship)
+        # Calculate new position
+        lat_offset = distance * math.cos(angle)
+        lon_offset = distance * math.sin(angle)
         
-        return ships
+        return Position(
+            latitude=start_pos.latitude + lat_offset,
+            longitude=start_pos.longitude + lon_offset
+        )
     
-    async def _generate_rescue_scenario(self, num_ships: int, region: str, params: Dict[str, Any]) -> List:
-        """Generate search and rescue scenario"""
-        from ..core.models import ShipType
+    def _infer_ship_type(self, location: str) -> str:
+        """Infer likely ship type from location context"""
+        location_lower = location.lower()
         
-        ships = self.generator.generate_maritime_scenario(num_ships, region)
-        
-        # Convert ships to rescue vessels
-        for i, ship in enumerate(ships):
-            if i == 0:
-                ship.ship_type = ShipType.SEARCH_RESCUE  # Lead rescue vessel
-            elif i % 2 == 0:
-                ship.ship_type = ShipType.PILOT_VESSEL  # Coast guard patrol
+        if any(word in location_lower for word in ['tanker', 'oil', 'cargo', 'container']):
+            return 'CARGO'
+        elif any(word in location_lower for word in ['fishing', 'trawl', 'nets']):
+            return 'FISHING' 
+        elif any(word in location_lower for word in ['ferry', 'passenger', 'cruise']):
+            return 'PASSENGER'
+        elif any(word in location_lower for word in ['patrol', 'coast guard', 'military']):
+            return 'PILOT_VESSEL'
+        elif any(word in location_lower for word in ['fast', 'speed', 'racing']):
+            return 'HIGH_SPEED_CRAFT'
+        else:
+            # Default based on location
+            if any(word in location_lower for word in ['port', 'harbour', 'harbor']):
+                return 'CARGO'  # Port areas likely cargo
             else:
-                ship.ship_type = ShipType.HIGH_SPEED_CRAFT  # Fast response
-        
-        return ships
+                return 'CARGO'  # Default to cargo ships
     
-    async def _generate_cruise_scenario(self, num_ships: int, region: str, params: Dict[str, Any]) -> List:
-        """Generate cruise tourism scenario"""
-        from ..core.models import ShipType
-        
-        ships = self.generator.generate_maritime_scenario(num_ships, region)
-        
-        # Convert to cruise/passenger vessels
-        for ship in ships:
-            ship.ship_type = ShipType.PASSENGER
-        
-        return ships
+    def _str_to_ship_type(self, ship_type_str: str) -> ShipType:
+        """Convert string to ShipType enum"""
+        mapping = {
+            'CARGO': ShipType.CARGO,
+            'PASSENGER': ShipType.PASSENGER, 
+            'FISHING': ShipType.FISHING,
+            'PILOT_VESSEL': ShipType.PILOT_VESSEL,
+            'HIGH_SPEED_CRAFT': ShipType.HIGH_SPEED_CRAFT
+        }
+        return mapping.get(ship_type_str.upper(), ShipType.CARGO)
     
-    async def _generate_military_scenario(self, num_ships: int, region: str, params: Dict[str, Any]) -> List:
-        """Generate military exercise scenario"""
-        from ..core.models import ShipType
-        
-        ships = self.generator.generate_maritime_scenario(num_ships, region)
-        
-        # Convert to military vessels
-        for i, ship in enumerate(ships):
-            if i % 3 == 0:
-                ship.ship_type = ShipType.LAW_ENFORCEMENT  # Naval vessel
-            else:
-                ship.ship_type = ShipType.PILOT_VESSEL  # Patrol vessel
-        
-        return ships
+    def _get_ship_speed(self, ship_type: ShipType) -> float:
+        """Get appropriate speed for ship type"""
+        speeds = {
+            ShipType.CARGO: 12.0,
+            ShipType.PASSENGER: 18.0,
+            ShipType.FISHING: 8.0,
+            ShipType.PILOT_VESSEL: 20.0,
+            ShipType.HIGH_SPEED_CRAFT: 35.0
+        }
+        return speeds.get(ship_type, 12.0)
     
-    async def _generate_fishing_fleet_scenario(self, num_ships: int, region: str, params: Dict[str, Any]) -> List:
-        """Generate fishing fleet scenario"""
-        from ..core.models import ShipType
-        
-        ships = self.generator.generate_maritime_scenario(num_ships, region)
-        
-        # Convert all to fishing vessels
-        for ship in ships:
-            ship.ship_type = ShipType.FISHING
-        
-        return ships
+    def _get_route_type(self, ship_type: ShipType):
+        """Get route type for ship type"""        
+        mapping = {
+            ShipType.CARGO: RouteType.CARGO,
+            ShipType.PASSENGER: RouteType.FERRY,
+            ShipType.FISHING: RouteType.FISHING,
+            ShipType.PILOT_VESSEL: RouteType.PATROL,
+            ShipType.HIGH_SPEED_CRAFT: RouteType.COASTAL
+        }
+        return mapping.get(ship_type, RouteType.CARGO)
     
-    async def _generate_port_operations_scenario(self, num_ships: int, region: str, params: Dict[str, Any]) -> List:
-        """Generate port operations scenario"""
-        from ..core.models import ShipType
+    def _generate_ship_name(self, ship_type: ShipType, index: int, location: str) -> str:
+        """Generate ship name based on type and location"""
         
-        ships = self.generator.generate_maritime_scenario(num_ships, region)
+        # Extract region/country from location
+        location_lower = location.lower()
+        region = "MARITIME"
         
-        # Mixed port operations fleet
-        for i, ship in enumerate(ships):
-            if i % 4 == 0:
-                ship.ship_type = ShipType.TUG  # Harbor tug
-            elif i % 4 == 1:
-                ship.ship_type = ShipType.PILOT_VESSEL  # Port pilot
-            elif i % 4 == 2:
-                ship.ship_type = ShipType.CARGO  # Container ship
-            else:
-                ship.ship_type = ShipType.PASSENGER  # Ferry
+        if any(word in location_lower for word in ['uk', 'england', 'british', 'southampton', 'london']):
+            region = "BRITISH"
+        elif any(word in location_lower for word in ['mediterranean', 'italy', 'spain', 'france']):
+            region = "EUROPEAN"
+        elif any(word in location_lower for word in ['north sea', 'norwegian', 'dutch', 'german']):
+            region = "NORTHERN"
+        elif any(word in location_lower for word in ['asia', 'singapore', 'china', 'japan']):
+            region = "ASIAN"
         
-        return ships
+        # Ship type prefixes
+        prefixes = {
+            ShipType.CARGO: [f"{region} TRADER", f"{region} CARGO", f"{region} CONTAINER"],
+            ShipType.PASSENGER: [f"{region} FERRY", f"{region} STAR", f"{region} PRINCESS"], 
+            ShipType.FISHING: [f"{region} FISHER", f"{region} CATCH", f"{region} HUNTER"],
+            ShipType.PILOT_VESSEL: [f"{region} PILOT", f"{region} PATROL", f"{region} GUARDIAN"],
+            ShipType.HIGH_SPEED_CRAFT: [f"{region} ARROW", f"{region} SPEED", f"{region} SWIFT"]
+        }
+        
+        prefix_list = prefixes.get(ship_type, [f"{region} VESSEL"])
+        chosen_prefix = prefix_list[index % len(prefix_list)]
+        
+        return f"{chosen_prefix}_{index + 1}"
+    
+    async def _list_available_ports(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """List available ports"""
+        
+        # Simplified port list
+        ports = {
+            "SOUTHAMPTON": {"latitude": 50.8992, "longitude": -1.4044, "country": "UK"},
+            "PORTSMOUTH": {"latitude": 50.8058, "longitude": -1.0872, "country": "UK"},
+            "LIVERPOOL": {"latitude": 53.4084, "longitude": -2.9916, "country": "UK"},
+            "ROTTERDAM": {"latitude": 51.9225, "longitude": 4.4792, "country": "Netherlands"},
+            "HAMBURG": {"latitude": 53.5511, "longitude": 9.9937, "country": "Germany"},
+            "BARCELONA": {"latitude": 41.3851, "longitude": 2.1734, "country": "Spain"},
+            "MARSEILLE": {"latitude": 43.2965, "longitude": 5.3698, "country": "France"},
+            "NAPLES": {"latitude": 40.8518, "longitude": 14.2681, "country": "Italy"},
+            "SINGAPORE": {"latitude": 1.2966, "longitude": 103.7764, "country": "Singapore"},
+            "NEW_YORK": {"latitude": 40.7128, "longitude": -74.0060, "country": "USA"}
+        }
+        
+        return {
+            "success": True,
+            "ports": ports,
+            "total_ports": len(ports),
+            "message": f"Available major ports: {', '.join(ports.keys())}"
+        }
     
     async def _get_ship_types(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Get information about ship types"""
+        """Get ship types information"""
         
         ship_types = {
-            "PASSENGER": {
-                "description": "Passenger ferries and cruise ships",
-                "typical_speed": "12-18 knots",
-                "routes": "Regular scheduled ferry routes",
-                "example": "Dublin-Holyhead ferry"
-            },
             "CARGO": {
-                "description": "Container ships and bulk carriers",
-                "typical_speed": "8-12 knots",
-                "routes": "Commercial shipping lanes",
-                "example": "Container ship from Dublin to Liverpool"
+                "description": "Cargo ships, container vessels, tankers",
+                "typical_speed": "10-15 knots",
+                "characteristics": "Large, slow, point-to-point routes"
+            },
+            "PASSENGER": {
+                "description": "Ferries, cruise ships, passenger vessels",
+                "typical_speed": "15-20 knots", 
+                "characteristics": "Regular routes, scheduled services"
             },
             "FISHING": {
-                "description": "Commercial fishing vessels",
-                "typical_speed": "6-10 knots", 
-                "routes": "Circular patterns in fishing grounds",
-                "example": "Trawler fishing in Irish Sea grounds"
+                "description": "Fishing vessels, trawlers",
+                "typical_speed": "6-10 knots",
+                "characteristics": "Circular patterns, fishing grounds"
             },
             "PILOT_VESSEL": {
-                "description": "Pilot boats and patrol vessels",
+                "description": "Pilot boats, patrol vessels, coast guard",
                 "typical_speed": "15-25 knots",
-                "routes": "Harbor approaches and patrol patterns",
-                "example": "Dublin Bay pilot vessel"
+                "characteristics": "Harbor approaches, patrol patterns" 
             },
             "HIGH_SPEED_CRAFT": {
-                "description": "Fast passenger boats and hydrofoils", 
-                "typical_speed": "20-40 knots",
-                "routes": "Express passenger services",
-                "example": "High-speed ferry between ports"
+                "description": "Fast boats, hydrofoils, speedboats",
+                "typical_speed": "25-40 knots",
+                "characteristics": "High speed, short routes"
             }
         }
         

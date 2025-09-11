@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent / "src"))
 
 from src.llm_integration.demo_client import AISDemo
-from src.generators.multi_ship_generator import WorldwideRoutes
+from src.generators.ais_generator import WorldwideRoutes
 from src.mcp_integration.mcp_server import AISMCPServer
 
 
@@ -115,10 +115,10 @@ async def test_ship_naming():
     print("\n🚢 Testing Region-Specific Ship Names")
     print("=" * 40)
     
-    from src.generators.multi_ship_generator import MultiShipGenerator
+    from src.generators.ais_generator import AISGenerator
     from src.core.models import ShipType
     
-    generator = MultiShipGenerator()
+    generator = AISGenerator()
     regions = ["irish_sea", "mediterranean", "asia", "north_sea"]
     ship_types = [ShipType.PASSENGER, ShipType.CARGO, ShipType.FISHING]
     

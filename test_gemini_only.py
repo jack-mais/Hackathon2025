@@ -118,7 +118,7 @@ async def test_sicily_coordinates_with_gemini():
     
     try:
         from src.llm_integration.gemini_client import AISGeminiClient
-        from src.generators.multi_ship_generator import WorldwideRoutes
+        from src.generators.ais_generator import WorldwideRoutes
         
         if not os.getenv("GEMINI_KEY"):
             print("❌ GEMINI_KEY not set - skipping Gemini test")

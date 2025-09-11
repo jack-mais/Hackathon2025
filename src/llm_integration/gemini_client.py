@@ -44,15 +44,12 @@ You support worldwide ports and ship types: PASSENGER (ferries), CARGO (containe
 When users ask for ship generation, immediately determine what tools to call:
 
 TOOLS AVAILABLE:
-1. generate_maritime_scenario - For general requests (defaults to Mediterranean region)
-   Parameters: num_ships, duration_hours, report_interval_minutes, scenario_name
+1. generate_ais_data - Generate AIS ship tracking data for any location worldwide
+   Parameters: num_ships, location, ship_types[], destination, duration_hours, scenario_name
 
-2. generate_custom_ships - For specific ship requests with custom routes anywhere worldwide
-   Parameters: ships[] (with ship_type, start_port, end_port), duration_hours, scenario_name
+2. list_available_ports - To show available ports
 
-3. list_available_ports - To show available ports
-
-4. get_ship_types - To show available ship types
+3. get_ship_types - To show available ship types
 
 You can handle requests for any maritime region worldwide. When users make requests:
 
@@ -63,8 +60,9 @@ IMMEDIATELY GENERATE DATA - Don't ask many clarifying questions. Use reasonable 
 - Region: Extract from their request or default to Mediterranean
 
 EXAMPLES:
-User: "5 cargo ships in north sea" → Call generate_maritime_scenario immediately
-User: "boats near Sicily" → Call generate_maritime_scenario with Mediterranean region and location_hint
+User: "5 cargo ships in north sea" → Call generate_ais_data immediately
+User: "6 ships outside Southampton" → Call generate_ais_data with location="outside Southampton"
+User: "boats near Sicily" → Call generate_ais_data with location="near Sicily"
 
 Always mention that both JSON data and interactive HTML maps are automatically generated.
 """
@@ -85,20 +83,32 @@ Always mention that both JSON data and interactive HTML maps are automatically g
                 # Call the MCP tool
                 tool_result = await self.mcp_server.call_tool(tool_name, tool_args)
                 
-                # Generate response with tool result
-                prompt = f"""
-{self.system_context}
-
-User request: {user_message}
-
-Tool called: {tool_name}
-Tool result: {json.dumps(tool_result, indent=2)}
-
-Please provide a helpful response to the user explaining what was generated and where the files were saved. Be conversational and mention they can visualize the data with maps.
-"""
-                
-                response = self.model.generate_content(prompt)
-                return response.text
+                # Check if tool execution was successful
+                if tool_result.get("success", False):
+                    # Return the successful result message directly
+                    success_message = tool_result.get("message", "✅ Data generated successfully!")
+                    
+                    # Add additional context about files generated
+                    files_info = ""
+                    if "saved_files" in tool_result:
+                        files_info = f"\n\n📁 **Generated Files:**"
+                        for file_type, file_path in tool_result["saved_files"].items():
+                            files_info += f"\n• {file_type.upper()}: {file_path}"
+                    
+                    # Add ship summary
+                    ships_info = ""
+                    if "ships" in tool_result and tool_result["ships"]:
+                        ships_info = f"\n\n🚢 **Generated Ships ({len(tool_result['ships'])}):**"
+                        for ship in tool_result["ships"][:3]:  # Show first 3 ships
+                            ships_info += f"\n• {ship.get('name', 'Unknown')} ({ship.get('type', 'Unknown type')}) - {ship.get('speed_knots', 0)} knots"
+                        if len(tool_result["ships"]) > 3:
+                            ships_info += f"\n• ... and {len(tool_result['ships']) - 3} more ships"
+                    
+                    return f"{success_message}{files_info}{ships_info}"
+                else:
+                    # Return error message
+                    error_msg = tool_result.get("error", "Unknown error occurred")
+                    return f"❌ **Error generating data:** {error_msg}"
                 
             else:
                 # No tools needed, direct conversation
@@ -120,6 +130,7 @@ Please respond helpfully about AIS ship generation. If they're asking for inform
     
     def _determine_tool_call(self, user_message: str) -> Optional[tuple]:
         """Advanced pattern matching for sophisticated scenario generation"""
+        import re
         
         user_lower = user_message.lower().strip()
         
@@ -130,32 +141,29 @@ Please respond helpfully about AIS ship generation. If they're asking for inform
         elif any(word in user_lower for word in ['ship types', 'types', 'what ships', 'available ships', 'kinds of ships']):
             return ('get_ship_types', {})
         
-        elif any(word in user_lower for word in ['generate', 'create', 'make', 'simulate', 'show me']) and any(word in user_lower for word in ['ship', 'ships', 'vessel', 'boat', 'fleet']):
+        elif (
+            # Generate verb + ship word
+            (any(word in user_lower for word in ['generate', 'create', 'make', 'simulate', 'show me']) and 
+             any(word in user_lower for word in ['ship', 'ships', 'vessel', 'boat', 'fleet', 'convoy', 'tanker', 'tankers'])) or
+            # Ship type + basic ship word
+            (any(word in user_lower for word in ['cargo', 'passenger', 'fishing', 'patrol', 'fast', 'tanker', 'tankers', 'convoy']) and 
+             any(word in user_lower for word in ['ship', 'ships', 'vessel', 'boat'])) or
+            # Standalone tanker/convoy keywords
+            any(word in user_lower for word in ['tanker', 'tankers', 'convoy']) or
+            # Number + ship pattern (e.g., "5 tankers", "3 ships")
+            bool(re.search(r'\d+\s*(ships?|vessels?|boats?|tankers?|convoy)', user_lower))
+        ):
             # Use advanced scenario parsing
             scenario_details = self._parse_sophisticated_scenario(user_message)
             
-            # Determine best tool based on parsed details
-            if scenario_details['custom_routes']:
-                return ('generate_custom_ships', {
-                    'ships': scenario_details['custom_routes'],
-                    'duration_hours': scenario_details['duration'],
-                    'scenario_name': scenario_details['scenario_name']
-                })
-            elif scenario_details['region']:
-                return ('generate_maritime_scenario', {
-                    'num_ships': scenario_details['num_ships'],
-                    'region': scenario_details['region'],
-                    'duration_hours': scenario_details['duration'],
-                    'scenario_name': scenario_details['scenario_name'],
-                    'location_hint': user_message  # Pass original message for location parsing
-                })
-            else:
-                return ('generate_maritime_scenario', {
-                    'num_ships': scenario_details['num_ships'],
-                    'region': 'mediterranean',
-                    'duration_hours': scenario_details['duration'],
-                    'scenario_name': scenario_details['scenario_name']
-                })
+            # Use the simplified unified tool
+            return ('generate_ais_data', {
+                'num_ships': scenario_details['num_ships'],
+                'location': user_message,  # Pass the original message as location
+                'ship_types': scenario_details.get('ship_types', []),
+                'duration_hours': scenario_details['duration'],
+                'scenario_name': scenario_details['scenario_name']
+            })
         
         return None
     
@@ -168,7 +176,7 @@ Please respond helpfully about AIS ship generation. If they're asking for inform
         
         scenario = {
             'num_ships': 3,
-            'duration': 2.0,
+            'duration': 2.0,  # Will be adjusted based on ship type later
             'region': 'mediterranean',
             'ship_types': [],
             'custom_routes': [],
@@ -252,7 +260,7 @@ Please respond helpfully about AIS ship generation. If they're asking for inform
         
         # Enhanced ship type recognition
         ship_type_mapping = {
-            'CARGO': ['cargo', 'container', 'freight', 'bulk carrier', 'tanker', 'oil tanker', 'lng'],
+            'CARGO': ['cargo', 'container', 'freight', 'bulk carrier', 'tanker', 'tankers', 'oil tanker', 'lng', 'convoy'],
             'PASSENGER': ['passenger', 'ferry', 'cruise', 'liner', 'tourist vessel'],
             'FISHING': ['fishing', 'trawler', 'seiner', 'longline', 'crab vessel', 'shrimp boat'],
             'PILOT_VESSEL': ['pilot', 'patrol', 'coast guard', 'border patrol', 'police vessel'],
@@ -293,6 +301,17 @@ Please respond helpfully about AIS ship generation. If they're asking for inform
                 'start_port': identified_ports[0],
                 'end_port': identified_ports[1]
             }]
+        
+        # Adjust duration based on ship types (cargo ships need longer duration)
+        if not re.search(r'(\d+(?:\.\d+)?)\s*(minutes?|hours?|days?)', user_lower):  # Only if no explicit duration
+            if 'CARGO' in scenario['ship_types']:
+                scenario['duration'] = 6.0  # 6 hours for cargo ships
+            elif 'FISHING' in scenario['ship_types']:
+                scenario['duration'] = 4.0  # 4 hours for fishing vessels
+            elif 'PASSENGER' in scenario['ship_types']:
+                scenario['duration'] = 3.0  # 3 hours for passenger ferries
+            else:
+                scenario['duration'] = 2.0  # 2 hours default
         
         # Smart scenario naming
         if scenario['custom_routes']:

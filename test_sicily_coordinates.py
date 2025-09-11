@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent / "src"))
 
 from src.llm_integration.demo_client import AISDemo
-from src.generators.multi_ship_generator import WorldwideRoutes
+from src.generators.ais_generator import WorldwideRoutes
 
 
 async def test_sicily_coordinate_detection():

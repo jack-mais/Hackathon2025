@@ -86,9 +86,9 @@ class AISDataGenerator:
         self.print_header("🚶 Generating Walk Data - Multiple Ships")
         
         try:
-            from src.generators.multi_ship_generator import MultiShipGenerator
+            from src.generators.ais_generator import AISGenerator
             
-            generator = MultiShipGenerator()
+            generator = AISGenerator()
             
             # Generate different scenarios
             scenarios = [

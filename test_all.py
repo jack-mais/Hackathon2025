@@ -66,10 +66,10 @@ class AISTestSuite:
             self.print_result("AIS Generator Import", False, str(e))
         
         try:
-            from src.generators.multi_ship_generator import MultiShipGenerator
-            self.print_result("Multi-Ship Generator Import", True)
+            from src.generators.ais_generator import AISGenerator
+            self.print_result("AIS Generator Import", True)
         except Exception as e:
-            self.print_result("Multi-Ship Generator Import", False, str(e))
+            self.print_result("AIS Generator Import", False, str(e))
         
         try:
             from src.mcp_integration.mcp_server import AISMCPServer
@@ -116,10 +116,10 @@ class AISTestSuite:
         self.print_header("🚶 Testing Walk Phase - Multi-Ship Generation")
         
         try:
-            from src.generators.multi_ship_generator import MultiShipGenerator
+            from src.generators.ais_generator import AISGenerator
             
             # Create generator
-            generator = MultiShipGenerator()
+            generator = AISGenerator()
             
             # Generate scenario
             scenario_result = generator.generate_irish_sea_scenario(
