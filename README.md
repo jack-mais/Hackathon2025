@@ -208,7 +208,67 @@ python test_integrated_map_generation.py # Map visualization tests
 
 ## 🛠️ Technical Architecture
 
-**LLM Layer** → **MCP Protocol** → **Multi-Ship Generator** → **JSON/NMEA Output** → **Interactive Maps**
+### 🔄 **Modern AI-Driven Pipeline**
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  Natural Language│───▶│   Gemini AI     │───▶│  MCP Tools      │
+│  "Generate ships │    │   LLM Client    │    │  Server         │
+│   near Sicily"   │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                │                        │
+                                ▼                        ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│ Worldwide Port  │◄───│  AI Request     │───▶│ Multi-Ship      │
+│ Database (50+)  │    │  Processing     │    │ Generator       │
+│ • Mediterranean │    │                 │    │                 │
+│ • North Sea     │    └─────────────────┘    └─────────────────┘
+│ • Atlantic      │                                     │
+│ • Asia/Americas │                                     ▼
+└─────────────────┘              ┌─────────────────────────────────┐
+                                 │   Realistic Ship Movement       │
+                                 │ • Physics-based routing         │
+                                 │ • Ship type behaviors          │
+                                 │ • Maritime navigation status   │
+                                 │ • Time-series position data    │
+                                 └─────────────────────────────────┘
+                                              │
+                     ┌────────────────────────┼────────────────────────┐
+                     ▼                        ▼                        ▼
+           ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+           │  JSON Files     │    │ Interactive     │    │  NMEA Sentences │
+           │ • Ship metadata │    │ HTML Maps       │    │ • Industry std. │
+           │ • AIS positions │    │ • Ship tracks   │    │ • Real-time     │
+           │ • Timestamps    │    │ • Info popups   │    │ • GPS format    │
+           └─────────────────┘    └─────────────────┘    └─────────────────┘
+                     │                        │                        │
+                     └────────────────────────┼────────────────────────┘
+                                              ▼
+                              ┌─────────────────────────────────┐
+                              │      Additional Outputs         │
+                              │ • KML files (Google Earth)     │
+                              │ • FastAPI REST endpoints       │
+                              │ • Docker containerization      │
+                              └─────────────────────────────────┘
+```
+
+### 🧭 **Core System Flow**
+
+1. **🗣️ Natural Language Input**: User describes maritime scenario
+2. **🧠 Gemini AI Processing**: LLM understands intent and context
+3. **🔧 MCP Tool Selection**: Routes to appropriate maritime generation tools
+4. **🌍 Port Database Lookup**: Validates and selects from 50+ worldwide ports
+5. **🚢 Multi-Ship Generation**: Creates realistic ships with proper physics
+6. **📊 Data Processing**: Generates time-series position data with AIS compliance
+7. **💾 Multi-Format Output**: Saves to JSON, HTML maps, NMEA sentences, KML
+8. **📱 Visualization**: Interactive maps with ship tracking and metadata
+
+### ⚡ **Key Architecture Benefits**
+- **🤖 AI-First Design**: Natural language drives the entire pipeline
+- **🌍 Global Scale**: Worldwide port database with regional expertise
+- **🔧 Modular Components**: Clean separation between AI, data, and output layers
+- **📊 Multi-Format**: Industry-standard outputs for various use cases
+- **🧪 Fully Tested**: Comprehensive test suite for all components
 
 📐 **[View Complete Technical Architecture →](TECHNICAL_ARCHITECTURE.md)**
 
