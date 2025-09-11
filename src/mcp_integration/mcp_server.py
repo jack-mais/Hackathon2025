@@ -50,7 +50,7 @@ class AISMCPServer:
                             "default": []
                         },
                         "destination": {
-                            "type": "string", 
+                                        "type": "string",
                             "description": "Optional destination for point-to-point routes",
                             "default": ""
                         },
@@ -88,7 +88,7 @@ class AISMCPServer:
             "get_ship_types": {
                 "description": "Get available ship types and their characteristics",
                 "parameters": {
-                    "type": "object",
+                    "type": "object", 
                     "properties": {}
                 }
             }
@@ -198,10 +198,13 @@ class AISMCPServer:
                     "total_reports": len(states)
                 })
             
+            # Create descriptive filename with location
+            location_clean = self._clean_location_name(location)
+            timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+            filename = f"{scenario_name}_{location_clean}_{timestamp}"
+            
             # Save to file
-            saved_files = self.file_manager.save_multi_ship_data(
-                all_ship_data, f"{scenario_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
-            )
+            saved_files = self.file_manager.save_multi_ship_data(all_ship_data, filename)
             
             # Create response message
             files_info = []
@@ -433,6 +436,32 @@ class AISMCPServer:
         
         return None
     
+    def _clean_location_name(self, location: str) -> str:
+        """Clean location name for use in filenames"""
+        import re
+        
+        # Convert to lowercase and replace spaces/special chars with underscores
+        clean = location.lower().strip()
+        
+        # Remove common maritime keywords
+        clean = re.sub(r'\b(port of|off|coast of|near|outside|south of|north of|east of|west of)\b', '', clean)
+        clean = clean.strip()
+        
+        # Replace spaces and special characters with underscores
+        clean = re.sub(r'[^\w\s-]', '', clean)  # Remove special chars except word chars, spaces, hyphens
+        clean = re.sub(r'[-\s]+', '_', clean)   # Replace spaces and hyphens with underscores
+        clean = clean.strip('_')                # Remove leading/trailing underscores
+        
+        # Limit length
+        if len(clean) > 20:
+            clean = clean[:20]
+        
+        # Fallback if empty
+        if not clean:
+            clean = "unknown_location"
+            
+        return clean
+    
     def _generate_nearby_position(self, start_pos: Position, ship_type: ShipType) -> Position:
         """Generate a nearby position for local area movement"""
         
@@ -599,7 +628,7 @@ class AISMCPServer:
             },
             "FISHING": {
                 "description": "Fishing vessels, trawlers",
-                "typical_speed": "6-10 knots",
+                "typical_speed": "6-10 knots", 
                 "characteristics": "Circular patterns, fishing grounds"
             },
             "PILOT_VESSEL": {
